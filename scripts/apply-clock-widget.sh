@@ -207,8 +207,12 @@ final class WhtClockNotification {
    Date started=parser.parse(key+" "+start);
    long startedAt=started==null?System.currentTimeMillis():started.getTime();
    String dayDate=new SimpleDateFormat("EEE, d MMM",Locale.getDefault()).format(now);
-   String startLabel=new SimpleDateFormat("h:mm a",Locale.getDefault()).format(new Date(startedAt));
+   String startLabel=new SimpleDateFormat(state.optBoolean("use24Hour",true)?"HH:mm":"h:mm a",Locale.getDefault()).format(new Date(startedAt));
+   if(!state.optBoolean("use24Hour",true))startLabel=startLabel.toLowerCase(Locale.getDefault());
    String elapsedLabel=elapsedLabel(startedAt,System.currentTimeMillis());
+   ShiftProgressWidgetProvider.TodayShift scheduledShift=ShiftProgressWidgetProvider.today(state);
+   int shiftPercent=ShiftProgressWidgetProvider.completion(state,scheduledShift);
+   String progressLabel=shiftPercent+"% COMPLETE";
 
    Intent open=new Intent(c,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);
    PendingIntent pi=PendingIntent.getActivity(c,2450,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
@@ -218,7 +222,9 @@ final class WhtClockNotification {
    b.setSmallIcon(R.drawable.wht_notification_small)
     .setLargeIcon(BitmapFactory.decodeResource(c.getResources(),R.drawable.wht_notification_logo))
     .setContentTitle("Clocked In At "+startLabel)
-    .setContentText(dayDate)
+    .setContentText(dayDate+" • "+elapsedLabel)
+    .setSubText(progressLabel)
+    .setProgress(Math.max(100,shiftPercent),shiftPercent,false)
     .setWhen(startedAt)
     .setShowWhen(false)
     .setUsesChronometer(false)
@@ -235,7 +241,7 @@ final class WhtClockNotification {
    // Request Android 16 Live Update promotion. Samsung maps eligible promoted
    // ongoing notifications onto its Now Bar surface.
    requestPromotion(b);
-   setShortStatus(b,dayDate+" • "+elapsedLabel);
+   setShortStatus(b,dayDate+" • "+elapsedLabel+" • "+shiftPercent+"%");
    if(Build.VERSION.SDK_INT>=26)b.setBadgeIconType(Notification.BADGE_ICON_SMALL);
    m.notify(ID,b.build());
    scheduleTick(c,true);
