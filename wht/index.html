@@ -1523,7 +1523,7 @@
       <div id="sidebarTools"></div>
       <div id="scheduleActionsSlot" hidden></div>
       <div class="sidebar-footer">
-        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) v2.92</span></div>
+        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) v2.93</span></div>
         <div class="sidebar-footer-actions">
           <button type="button" class="sidebar-settings-button" id="sidebarSettingsBtn" aria-label="Open settings" title="Settings">⚙</button>
         </div>
@@ -1629,7 +1629,7 @@
       <div class="note" id="workNote">
         Your entries are saved automatically to this device. A backup copy is also kept in Downloads/WHT so it can survive an app reinstall.
       </div>
-      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) v2.92</span></footer>
+      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) v2.93</span></footer>
     </div>
 
     <div class="modalback" id="modalBack">
@@ -2355,7 +2355,7 @@
         context.textAlign = "right";
         context.fillText("© 2026 Mark Breddy · Puffins", 1330, y);
         context.font = "500 14px system-ui,sans-serif";
-        context.fillText("v2.92", 1330, y + 20);
+        context.fillText("v2.93", 1330, y + 20);
         context.restore();
       }
       function weekRows() {
@@ -2551,7 +2551,7 @@
           `Break: ${row.breakMin} min | Total: ${hoursMinutesLabel(row.hours)} | Rate: ${money(row.rate)}/h | Gross Pay: ${money(row.pay)}`,
           "",
         ));
-        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) v2.92");
+        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) v2.93");
         return lines.join("\n");
       }
       async function saveTxtDocument(content, fileName) {
@@ -3129,7 +3129,7 @@
           `Break: ${row.breakMin} min | Expected Hours: ${hoursMinutesLabel(row.hours)} | Rate: ${money(row.rate)}/h | Expected Gross Pay: ${money(row.pay)}`,
           "",
         ));
-        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) v2.92");
+        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) v2.93");
         return lines.join("\n");
       }
 
@@ -3405,7 +3405,7 @@
           toast("Please enter a title and description");
           return;
         }
-        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) v2.92`;
+        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) v2.93`;
         window.location.href = `mailto:${REPORT_ISSUE_EMAIL}?subject=${encodeURIComponent(REPORT_ISSUE_SUBJECT)}&body=${encodeURIComponent(body)}`;
         returnFromIssueReport();
       }
