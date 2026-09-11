@@ -57,7 +57,7 @@ jobs:
         env:
           WHT_KEYSTORE_PASSWORD: ${{ secrets.WHT_KEYSTORE_PASSWORD }}
           WHT_VERSION_CODE: ${{ github.run_number }}
-          WHT_VERSION_NAME: '2.86'
+          WHT_VERSION_NAME: '2.87'
         run: python ./scripts/apply-release-signing.py
 
       - name: Build signed release APK
@@ -67,11 +67,11 @@ jobs:
         run: chmod +x gradlew && ./gradlew assembleRelease
 
       - name: Name release APK
-        run: cp android/app/build/outputs/apk/release/app-release.apk "WHT v2.86.apk"
+        run: cp android/app/build/outputs/apk/release/app-release.apk "WHT v2.87.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: WHT-v2.86
-          path: WHT v2.86.apk
+          name: WHT-v2.87
+          path: WHT v2.87.apk
           if-no-files-found: error

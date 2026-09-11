@@ -4,7 +4,7 @@ JAVA_DIR="android/app/src/main/java/com/workedhourstracker/app"
 RES_DIR="android/app/src/main/res"
 MANIFEST="android/app/src/main/AndroidManifest.xml"
 [[ -d "$JAVA_DIR" && -f "$MANIFEST" ]] || { echo "Run npx cap add android first."; exit 1; }
-mkdir -p "$RES_DIR/layout" "$RES_DIR/xml" "$RES_DIR/drawable" "$RES_DIR/drawable-night"
+mkdir -p "$RES_DIR/layout" "$RES_DIR/xml" "$RES_DIR/drawable" "$RES_DIR/drawable-night" "$RES_DIR/drawable-nodpi" "$RES_DIR/values" "$RES_DIR/values-night"
 cp "wht/header-logo-light.png" "$RES_DIR/drawable/wht_widget_logo.png"
 cp "wht/header-logo.png" "$RES_DIR/drawable-night/wht_widget_logo.png"
 cp "wht/header-logo-light.png" "$RES_DIR/drawable/wht_notification_logo.png"
@@ -43,18 +43,27 @@ centered("12:30 pm – 5:00 pm", 315, time_font, "white")
 logo = Image.open("wht/header-logo.png").convert("RGBA")
 logo.thumbnail((42, 42), Image.Resampling.LANCZOS)
 canvas.alpha_composite(logo, (size - logo.width - 12, 12))
-canvas.save("android/app/src/main/res/drawable/wht_shift_progress_preview.png")
+canvas.save("android/app/src/main/res/drawable-nodpi/wht_shift_progress_preview.png")
+
+ring_preview = Image.new("RGBA", (280, 280), (0, 0, 0, 0))
+ring_draw = ImageDraw.Draw(ring_preview)
+ring_draw.ellipse((18, 18, 262, 262), outline=(255, 255, 255, 70), width=20)
+box = ring_draw.textbbox((0, 0), "0%", font=percent_font)
+ring_draw.text(((280 - (box[2] - box[0])) / 2, 100), "0%", font=percent_font, fill="white")
+box = ring_draw.textbbox((0, 0), "COMPLETE", font=small)
+ring_draw.text(((280 - (box[2] - box[0])) / 2, 171), "COMPLETE", font=small, fill=(255, 255, 255, 190))
+ring_preview.save("android/app/src/main/res/drawable-nodpi/wht_progress_ring_preview.png")
 PY
 
 cat > "$RES_DIR/layout/wht_clock_widget.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:theme="@android:style/Theme.DeviceDefault.DayNight">
   <ImageView android:id="@+id/widget_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />
   <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="horizontal" android:padding="8dp">
-    <TextView android:id="@+id/widget_clock_in" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:background="@drawable/wht_widget_clock_in" android:text="Clock In" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" />
-    <TextView android:id="@+id/widget_clock_out" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:background="@drawable/wht_widget_clock_out" android:text="Clock Out" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" />
+    <TextView android:id="@+id/widget_clock_in" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:background="@drawable/wht_widget_clock_in" android:text="Clock In" android:textColor="@color/wht_widget_text" android:textSize="15sp" android:textStyle="bold" />
+    <TextView android:id="@+id/widget_clock_out" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:background="@drawable/wht_widget_clock_out" android:text="Clock Out" android:textColor="@color/wht_widget_text" android:textSize="15sp" android:textStyle="bold" />
   </LinearLayout>
-  <TextView android:id="@+id/widget_confirmation" android:layout_width="wrap_content" android:layout_height="36dp" android:layout_gravity="center" android:background="@drawable/wht_widget_confirmation" android:elevation="10dp" android:gravity="center" android:minWidth="118dp" android:paddingLeft="18dp" android:paddingRight="18dp" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:visibility="gone" />
+  <TextView android:id="@+id/widget_confirmation" android:layout_width="wrap_content" android:layout_height="36dp" android:layout_gravity="center" android:background="@drawable/wht_widget_confirmation" android:elevation="10dp" android:gravity="center" android:minWidth="118dp" android:paddingLeft="18dp" android:paddingRight="18dp" android:textColor="@color/wht_widget_text" android:textSize="14sp" android:textStyle="bold" android:visibility="gone" />
 </FrameLayout>
 XML
 
@@ -86,10 +95,10 @@ XML
 cat > "$RES_DIR/layout/wht_shift_progress_widget.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/progress_widget_root" android:layout_width="match_parent" android:layout_height="match_parent">
-  <ImageView android:id="@+id/progress_widget_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:contentDescription="@null" />
+  <ImageView android:id="@+id/progress_widget_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />
   <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical" android:padding="10dp">
     <TextView android:id="@+id/progress_widget_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="Today's Shift" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" />
-    <ImageView android:id="@+id/progress_ring" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:adjustViewBounds="true" android:scaleType="centerInside" android:contentDescription="Shift completion" />
+    <ImageView android:id="@+id/progress_ring" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:adjustViewBounds="true" android:scaleType="centerInside" android:src="@drawable/wht_progress_ring_preview" android:contentDescription="Shift completion" />
     <TextView android:id="@+id/progress_shift_time" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:maxLines="1" android:text="No shift scheduled" android:textColor="#E6FFFFFF" android:textSize="13sp" android:textStyle="bold" />
   </LinearLayout>
   <ImageView android:layout_width="25dp" android:layout_height="25dp" android:layout_gravity="top|right" android:layout_marginTop="7dp" android:layout_marginRight="8dp" android:src="@drawable/wht_widget_logo" android:contentDescription="WHT" />
@@ -97,7 +106,28 @@ cat > "$RES_DIR/layout/wht_shift_progress_widget.xml" <<'XML'
 XML
 
 cat > "$RES_DIR/drawable/wht_widget_background.xml" <<'XML'
-<?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><gradient android:angle="0" android:startColor="#17102B" android:endColor="#7651FF"/><corners android:radius="22dp"/></shape>
+<?xml version="1.0" encoding="utf-8"?>
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
+  <item android:maxLevel="0"><shape><gradient android:angle="0" android:startColor="#DCEcff" android:endColor="#FFDFF3"/><corners android:radius="22dp"/></shape></item>
+  <item android:maxLevel="1"><shape><gradient android:angle="0" android:startColor="#D9F1FF" android:endColor="#DFE4FF"/><corners android:radius="22dp"/></shape></item>
+  <item android:maxLevel="2"><shape><gradient android:angle="0" android:startColor="#EEE5FF" android:endColor="#FFE5F4"/><corners android:radius="22dp"/></shape></item>
+  <item android:maxLevel="10000"><shape><gradient android:angle="0" android:startColor="#DFF8EF" android:endColor="#E5F2FF"/><corners android:radius="22dp"/></shape></item>
+</level-list>
+XML
+cat > "$RES_DIR/drawable-night/wht_widget_background.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?>
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
+  <item android:maxLevel="0"><shape><gradient android:angle="0" android:startColor="#060810" android:endColor="#291744"/><corners android:radius="22dp"/></shape></item>
+  <item android:maxLevel="1"><shape><gradient android:angle="0" android:startColor="#04131F" android:endColor="#17234B"/><corners android:radius="22dp"/></shape></item>
+  <item android:maxLevel="2"><shape><gradient android:angle="0" android:startColor="#10091C" android:endColor="#401B54"/><corners android:radius="22dp"/></shape></item>
+  <item android:maxLevel="10000"><shape><gradient android:angle="0" android:startColor="#090B0F" android:endColor="#282D36"/><corners android:radius="22dp"/></shape></item>
+</level-list>
+XML
+cat > "$RES_DIR/values/wht_widget_colors.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><resources><color name="wht_widget_text">#FF11151C</color></resources>
+XML
+cat > "$RES_DIR/values-night/wht_widget_colors.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><resources><color name="wht_widget_text">#FFFFFFFF</color></resources>
 XML
 cat > "$RES_DIR/drawable/wht_widget_clock_in.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#DD238B45"/><corners android:radius="16dp"/><stroke android:width="1dp" android:color="#44FFFFFF"/></shape>
@@ -124,6 +154,7 @@ final class WhtWidgetStyle {
  static final String PREFS="wht_device_save", DATA="app_data";
  static JSONObject state(Context c){try{JSONObject s=new JSONObject(c.getSharedPreferences(PREFS,0).getString(DATA,"{}"));int night=c.getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK;s.put("themeMode",night==android.content.res.Configuration.UI_MODE_NIGHT_YES?"dark":"light");return s;}catch(Exception e){return new JSONObject();}}
  static int[] palette(JSONObject s){boolean light="light".equals(s.optString("themeMode","dark"));String raw=s.optString(light?"lightBackground":"darkBackground",light?"linear-gradient(145deg, #dcecff, #ffdff3)":"linear-gradient(145deg, #060810, #291744)");java.util.regex.Matcher m=java.util.regex.Pattern.compile("#[0-9a-fA-F]{6}").matcher(raw);int first=light?Color.rgb(220,236,255):Color.rgb(6,8,16),last=light?Color.rgb(255,223,243):Color.rgb(41,23,68);if(m.find())try{first=Color.parseColor(m.group());}catch(Exception ignored){}while(m.find())try{last=Color.parseColor(m.group());}catch(Exception ignored){}return new int[]{first,last};}
+ static int paletteLevel(JSONObject s){boolean light="light".equals(s.optString("themeMode","dark"));String raw=s.optString(light?"lightBackground":"darkBackground","").toLowerCase(java.util.Locale.US);if(raw.contains(light?"#d9f1ff":"#04131f"))return 1;if(raw.contains(light?"#eee5ff":"#10091c"))return 2;if(raw.contains(light?"#dff8ef":"#090b0f"))return 3;return 0;}
  static Bitmap background(JSONObject s){int[] colors=palette(s);Bitmap x=Bitmap.createBitmap(600,110,Bitmap.Config.ARGB_8888);Paint p=new Paint(1);p.setShader(new LinearGradient(0,0,600,110,colors[0],colors[1],Shader.TileMode.CLAMP));new Canvas(x).drawRoundRect(0,0,600,110,24,24,p);return x;}
  static int blend(int a,int b,float n){return Color.rgb(Math.round(Color.red(a)+(Color.red(b)-Color.red(a))*n),Math.round(Color.green(a)+(Color.green(b)-Color.green(a))*n),Math.round(Color.blue(a)+(Color.blue(b)-Color.blue(a))*n));}
 }
@@ -287,7 +318,7 @@ public class ClockWidgetProvider extends AppWidgetProvider {
  static final String IN="com.workedhourstracker.app.CLOCK_IN", OUT="com.workedhourstracker.app.CLOCK_OUT";
  public void onUpdate(Context c,AppWidgetManager m,int[] ids){JSONObject s=WhtWidgetStyle.state(c);for(int id:ids)m.updateAppWidget(id,view(c,s));}
  public static void refreshAll(Context c){AppWidgetManager m=AppWidgetManager.getInstance(c);int[] ids=m.getAppWidgetIds(new ComponentName(c,ClockWidgetProvider.class));JSONObject s=WhtWidgetStyle.state(c);for(int id:ids)m.updateAppWidget(id,view(c,s));}
- static RemoteViews view(Context c,JSONObject s){RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.wht_clock_widget);v.setImageViewBitmap(R.id.widget_background,WhtWidgetStyle.background(s));v.setViewVisibility(R.id.widget_confirmation,View.GONE);int text="light".equals(s.optString("themeMode","dark"))?android.graphics.Color.BLACK:android.graphics.Color.WHITE;v.setTextColor(R.id.widget_clock_in,text);v.setTextColor(R.id.widget_clock_out,text);v.setTextColor(R.id.widget_confirmation,text);v.setOnClickPendingIntent(R.id.widget_clock_in,pending(c,IN,101));v.setOnClickPendingIntent(R.id.widget_clock_out,pending(c,OUT,102));return v;}
+ static RemoteViews view(Context c,JSONObject s){RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.wht_clock_widget);v.setImageViewResource(R.id.widget_background,R.drawable.wht_widget_background);v.setInt(R.id.widget_background,"setImageLevel",WhtWidgetStyle.paletteLevel(s));v.setViewVisibility(R.id.widget_confirmation,View.GONE);v.setOnClickPendingIntent(R.id.widget_clock_in,pending(c,IN,101));v.setOnClickPendingIntent(R.id.widget_clock_out,pending(c,OUT,102));return v;}
  static PendingIntent pending(Context c,String a,int n){return PendingIntent.getBroadcast(c,n,new Intent(c,ClockWidgetProvider.class).setAction(a),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);}
  public void onReceive(Context c,Intent i){super.onReceive(c,i);String a=i.getAction();if(Intent.ACTION_CONFIGURATION_CHANGED.equals(a)){refreshAll(c);return;}if(!IN.equals(a)&&!OUT.equals(a))return;PendingResult result=goAsync();new Thread(()->{record(c,IN.equals(a)?"start":"finish",IN.equals(a)?"Clocked In":"Clocked Out");try{Thread.sleep(1900);}catch(InterruptedException ignored){Thread.currentThread().interrupt();}refreshAll(c);result.finish();}).start();}
  void record(Context c,String field,String message){try{Date now=new Date();String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(now),time=new SimpleDateFormat("HH:mm",Locale.US).format(now);JSONObject s=WhtWidgetStyle.state(c),entries=s.optJSONObject("entries");if(entries==null){entries=new JSONObject();s.put("entries",entries);}JSONObject e=entries.optJSONObject(date);if(e==null)e=new JSONObject();e.put(field,time);if("start".equals(field))e.remove("finish");entries.put(date,e);s.put("savedAt",System.currentTimeMillis());c.getSharedPreferences(WhtWidgetStyle.PREFS,0).edit().putString(WhtWidgetStyle.DATA,s.toString()).commit();WhtClockNotification.sync(c,s);WhtClockSound.play(c);showConfirmation(c,s,message);}catch(Exception e){Toast.makeText(c,"WHT could not save the time",Toast.LENGTH_LONG).show();}}
