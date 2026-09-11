@@ -1,0 +1,77 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main", "master"]
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Prepare offline photo import
+        run: npm run prepare:ocr
+
+      - name: Install image tools
+        run: python -m pip install --upgrade Pillow
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Apply light and dark Android launcher icons
+        run: bash ./scripts/apply-android-icon.sh
+
+      - name: Add native PNG gallery export
+        run: bash ./scripts/apply-gallery-export.sh
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Sync web app into Android
+        run: npx cap sync android
+
+      - name: Configure persistent release signing
+        env:
+          WHT_KEYSTORE_PASSWORD: ${{ secrets.WHT_KEYSTORE_PASSWORD }}
+          WHT_VERSION_CODE: ${{ github.run_number }}
+          WHT_VERSION_NAME: '2.80'
+        run: python ./scripts/apply-release-signing.py
+
+      - name: Build signed release APK
+        working-directory: android
+        env:
+          WHT_KEYSTORE_PASSWORD: ${{ secrets.WHT_KEYSTORE_PASSWORD }}
+        run: chmod +x gradlew && ./gradlew assembleRelease
+
+      - name: Name release APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk "WHT v2.80.apk"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: WHT-v2.80
+          path: WHT v2.80.apk
+          if-no-files-found: error
