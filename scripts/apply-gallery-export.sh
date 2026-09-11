@@ -77,9 +77,17 @@ public class MainActivity extends BridgeActivity {
         ShiftProgressWidgetProvider.refreshAll(this);
     }
     private void openRequestedScreen(Intent intent) {
-        if (intent == null || !"schedule".equals(intent.getStringExtra("wht_open_screen"))) return;
+        if (intent == null) return;
+        String destination = intent.getStringExtra("wht_open_screen");
+        if (destination == null) return;
         intent.removeExtra("wht_open_screen");
-        getBridge().getWebView().postDelayed(() -> getBridge().getWebView().evaluateJavascript("if(typeof showScheduleScreen==='function'){if(typeof closeSidebar==='function')closeSidebar();showScheduleScreen();}", null), 900);
+        String javascript;
+        if ("schedule".equals(destination)) {
+            javascript = "if(typeof showScheduleScreen==='function'){if(typeof closeSidebar==='function')closeSidebar();showScheduleScreen();}";
+        } else if ("worked_today".equals(destination)) {
+            javascript = "if(typeof showWorkScreen==='function'){if(typeof closeSidebar==='function')closeSidebar();viewMonday=monday(new Date());showWorkScreen();if(typeof focusTodayCard==='function')focusTodayCard();}";
+        } else return;
+        getBridge().getWebView().postDelayed(() -> getBridge().getWebView().evaluateJavascript(javascript, null), 900);
     }
 }
 JAVA
