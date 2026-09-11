@@ -258,6 +258,58 @@ public class GallerySaverPlugin extends Plugin {
         MediaScannerConnection.scanFile(getContext(), new String[]{file.getAbsolutePath()}, new String[]{SAVE_MIME}, null);
     }
 
+    @PluginMethod
+    public void saveText(PluginCall call) {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P && getPermissionState("storage") != PermissionState.GRANTED) {
+            requestPermissionForAlias("storage", call, "textStoragePermissionResult");
+            return;
+        }
+        saveTextNow(call);
+    }
+
+    @PermissionCallback
+    private void textStoragePermissionResult(PluginCall call) {
+        if (getPermissionState("storage") == PermissionState.GRANTED) saveTextNow(call);
+        else call.reject("Storage permission is required to save the TXT file.");
+    }
+
+    private void saveTextNow(PluginCall call) {
+        String data = call.getString("data");
+        String fileName = call.getString("fileName", "wht-export.txt");
+        if (data == null) {
+            call.reject("TXT data was missing.");
+            return;
+        }
+        fileName = fileName.replaceAll("[^A-Za-z0-9._-]", "-");
+        if (!fileName.toLowerCase().endsWith(".txt")) fileName += ".txt";
+        try {
+            byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
+                values.put(MediaStore.Downloads.MIME_TYPE, "text/plain");
+                values.put(MediaStore.Downloads.RELATIVE_PATH, "Download/WHT/");
+                Uri uri = getContext().getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                if (uri == null) throw new Exception("Android could not create the TXT file.");
+                try (OutputStream stream = getContext().getContentResolver().openOutputStream(uri)) {
+                    if (stream == null) throw new Exception("Android could not open the TXT file.");
+                    stream.write(bytes);
+                }
+            } else {
+                File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "WHT");
+                if (!folder.exists() && !folder.mkdirs()) throw new Exception("Could not create Downloads/WHT.");
+                File file = new File(folder, fileName);
+                try (FileOutputStream stream = new FileOutputStream(file)) {
+                    stream.write(bytes);
+                }
+                MediaScannerConnection.scanFile(getContext(), new String[]{file.getAbsolutePath()}, new String[]{"text/plain"}, null);
+            }
+            call.resolve();
+        } catch (Exception error) {
+            call.reject("Could not save the TXT file: " + error.getMessage(), error);
+        }
+    }
+
     private String loadLegacyDocument() throws Exception {
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "WHT/" + SAVE_NAME);
         if (!file.exists()) return "";
