@@ -63,7 +63,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override protected void onNewIntent(Intent intent) { super.onNewIntent(intent); setIntent(intent); openRequestedScreen(intent); }
-    @Override protected void onResume() {
+    @Override public void onResume() {
         super.onResume();
         refreshWidgets();
     }
