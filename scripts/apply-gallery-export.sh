@@ -292,6 +292,7 @@ public class GallerySaverPlugin extends Plugin {
         if (!fileName.toLowerCase().endsWith(".txt")) fileName += ".txt";
         try {
             byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
+            Uri savedUri;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ContentValues values = new ContentValues();
                 values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
@@ -303,6 +304,7 @@ public class GallerySaverPlugin extends Plugin {
                     if (stream == null) throw new Exception("Android could not open the TXT file.");
                     stream.write(bytes);
                 }
+                savedUri = uri;
             } else {
                 File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "WHT");
                 if (!folder.exists() && !folder.mkdirs()) throw new Exception("Could not create Downloads/WHT.");
@@ -311,10 +313,35 @@ public class GallerySaverPlugin extends Plugin {
                     stream.write(bytes);
                 }
                 MediaScannerConnection.scanFile(getContext(), new String[]{file.getAbsolutePath()}, new String[]{"text/plain"}, null);
+                savedUri = Uri.fromFile(file);
             }
-            call.resolve();
+            JSObject result = new JSObject();
+            result.put("uri", savedUri.toString());
+            result.put("folder", "Downloads/WHT");
+            call.resolve(result);
         } catch (Exception error) {
             call.reject("Could not save the TXT file: " + error.getMessage(), error);
+        }
+    }
+
+    @PluginMethod
+    public void openExportedFile(PluginCall call) {
+        String value = call.getString("uri");
+        if (value == null || value.isEmpty()) {
+            call.reject("Exported file URI was missing.");
+            return;
+        }
+        try {
+            Uri uri = Uri.parse(value);
+            String mime = getContext().getContentResolver().getType(uri);
+            if (mime == null) mime = value.toLowerCase().endsWith(".txt") ? "text/plain" : "image/png";
+            Intent open = new Intent(Intent.ACTION_VIEW);
+            open.setDataAndType(uri, mime);
+            open.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            getActivity().startActivity(Intent.createChooser(open, "Open WHT export"));
+            call.resolve();
+        } catch (Exception error) {
+            call.reject("No compatible app could open this export: " + error.getMessage(), error);
         }
     }
 
@@ -378,7 +405,9 @@ public class GallerySaverPlugin extends Plugin {
             email.setClipData(ClipData.newRawUri("WHT hours report", uri));
             email.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             getActivity().startActivity(Intent.createChooser(email, "Email WHT export"));
-            call.resolve();
+            JSObject result = new JSObject();
+            result.put("uri", uri.toString());
+            call.resolve(result);
         } catch (Exception error) {
             call.reject("Could not open an email app with the PNG attached: " + error.getMessage(), error);
         }
