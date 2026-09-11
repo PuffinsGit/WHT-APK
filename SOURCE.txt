@@ -1,0 +1,2 @@
+Source: WorkedHoursTracker_Desktop_Browser v1.4.zip
+Wrapped for Android with Capacitor 8.5.1.

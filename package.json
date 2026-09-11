@@ -1,0 +1,22 @@
+{
+  "name": "wht-clock-in-clock-out",
+  "version": "3.0.0",
+  "private": true,
+  "description": "WorkedHoursTracker Android wrapper",
+  "scripts": {
+    "build": "echo Web app is already built in wht",
+    "prepare:ocr": "bash ./scripts/prepare-ocr-assets.sh",
+    "android:add": "cap add android",
+    "android:sync": "cap sync android",
+    "android:open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.5.1",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "tesseract.js": "^5.1.1"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/cli": "^8.5.1"
+  }
+}

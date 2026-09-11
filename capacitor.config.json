@@ -1,0 +1,8 @@
+{
+  "appId": "com.workedhourstracker.app",
+  "appName": "WHT",
+  "webDir": "wht",
+  "server": {
+    "androidScheme": "https"
+  }
+}
