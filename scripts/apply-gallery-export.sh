@@ -48,6 +48,7 @@ import android.os.Build;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -62,6 +63,19 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override protected void onNewIntent(Intent intent) { super.onNewIntent(intent); setIntent(intent); openRequestedScreen(intent); }
+    @Override protected void onResume() {
+        super.onResume();
+        refreshWidgets();
+    }
+    @Override public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        refreshWidgets();
+    }
+    private void refreshWidgets() {
+        ClockWidgetProvider.refreshAll(this);
+        NextShiftWidgetProvider.refreshAll(this);
+        ShiftProgressWidgetProvider.refreshAll(this);
+    }
     private void openRequestedScreen(Intent intent) {
         if (intent == null || !"schedule".equals(intent.getStringExtra("wht_open_screen"))) return;
         intent.removeExtra("wht_open_screen");

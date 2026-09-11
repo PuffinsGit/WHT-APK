@@ -11,6 +11,41 @@ cp "wht/header-logo-light.png" "$RES_DIR/drawable/wht_notification_logo.png"
 cp "wht/header-logo.png" "$RES_DIR/drawable-night/wht_notification_logo.png"
 cp "wht/header-logo.png" "$RES_DIR/drawable/wht_notification_small.png"
 
+# Samsung and some other launchers require previewImage even when previewLayout
+# is supplied. Generate a representative 0% Shift Progress preview.
+python3 - <<'PY'
+from pathlib import Path
+from PIL import Image, ImageDraw, ImageFont
+
+size = 360
+canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+draw = ImageDraw.Draw(canvas)
+draw.rounded_rectangle((4, 4, 356, 356), radius=34, fill=(12, 19, 39, 255), outline=(86, 70, 130, 255), width=2)
+try:
+    bold = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 25)
+    percent_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 54)
+    small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16)
+    time_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+except OSError:
+    bold = percent_font = small = time_font = ImageFont.load_default()
+
+def centered(text, y, font, fill):
+    box = draw.textbbox((0, 0), text, font=font)
+    draw.text(((size - (box[2] - box[0])) / 2, y), text, font=font, fill=fill)
+
+centered("Today's Shift", 22, bold, "white")
+ring = (76, 74, 284, 282)
+draw.ellipse(ring, outline=(255, 255, 255, 55), width=17)
+centered("0%", 138, percent_font, "white")
+centered("COMPLETE", 202, small, (255, 255, 255, 190))
+centered("12:30 pm – 5:00 pm", 315, time_font, "white")
+
+logo = Image.open("wht/header-logo.png").convert("RGBA")
+logo.thumbnail((42, 42), Image.Resampling.LANCZOS)
+canvas.alpha_composite(logo, (size - logo.width - 12, 12))
+canvas.save("android/app/src/main/res/drawable/wht_shift_progress_preview.png")
+PY
+
 cat > "$RES_DIR/layout/wht_clock_widget.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent">
@@ -28,7 +63,7 @@ cat > "$RES_DIR/layout/wht_next_shift_widget.xml" <<'XML'
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/next_shift_root" android:layout_width="match_parent" android:layout_height="match_parent">
   <ImageView android:id="@+id/next_shift_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />
   <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:paddingLeft="12dp" android:paddingTop="5dp" android:paddingRight="12dp" android:paddingBottom="6dp">
-    <TextView android:id="@+id/next_shift_title" android:layout_width="match_parent" android:layout_height="23dp" android:gravity="center" android:paddingLeft="38dp" android:paddingRight="38dp" android:text="Next Scheduled Shift" android:textAlignment="center" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" />
+    <TextView android:id="@+id/next_shift_title" android:layout_width="match_parent" android:layout_height="23dp" android:gravity="center" android:paddingLeft="38dp" android:paddingRight="38dp" android:text="Upcoming Shifts" android:textAlignment="center" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" />
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
       <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
         <TextView android:id="@+id/shift_one_date" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:maxLines="1" android:text="No upcoming shift" android:textAlignment="center" android:textColor="#FFFFFF" android:textSize="16sp" android:textStyle="bold" />
@@ -80,7 +115,7 @@ cat > "$RES_DIR/xml/wht_next_shift_widget_info.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?><appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:initialLayout="@layout/wht_next_shift_widget" android:previewLayout="@layout/wht_next_shift_widget" android:minWidth="180dp" android:minHeight="40dp" android:minResizeWidth="180dp" android:minResizeHeight="40dp" android:maxResizeWidth="390dp" android:resizeMode="horizontal" android:targetCellWidth="3" android:targetCellHeight="1" android:updatePeriodMillis="1800000" android:widgetCategory="home_screen" />
 XML
 cat > "$RES_DIR/xml/wht_shift_progress_widget_info.xml" <<'XML'
-<?xml version="1.0" encoding="utf-8"?><appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:initialLayout="@layout/wht_shift_progress_widget" android:previewLayout="@layout/wht_shift_progress_widget" android:minWidth="110dp" android:minHeight="110dp" android:minResizeWidth="110dp" android:minResizeHeight="110dp" android:maxResizeWidth="250dp" android:maxResizeHeight="180dp" android:resizeMode="horizontal" android:targetCellWidth="2" android:targetCellHeight="2" android:updatePeriodMillis="1800000" android:widgetCategory="home_screen" />
+<?xml version="1.0" encoding="utf-8"?><appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:initialLayout="@layout/wht_shift_progress_widget" android:previewLayout="@layout/wht_shift_progress_widget" android:previewImage="@drawable/wht_shift_progress_preview" android:minWidth="110dp" android:minHeight="110dp" android:minResizeWidth="110dp" android:minResizeHeight="110dp" android:maxResizeWidth="250dp" android:maxResizeHeight="180dp" android:resizeMode="horizontal" android:targetCellWidth="2" android:targetCellHeight="2" android:updatePeriodMillis="1800000" android:widgetCategory="home_screen" />
 XML
 cat > "$JAVA_DIR/WhtWidgetStyle.java" <<'JAVA'
 package com.workedhourstracker.app;
@@ -121,6 +156,8 @@ final class WhtClockNotification {
    String start=e==null?"":e.optString("start","");
    boolean active=e!=null&&!start.isEmpty()&&e.optString("finish","").isEmpty();
    NotificationManager m=(NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
+   ClockWidgetProvider.refreshAll(c);
+   NextShiftWidgetProvider.refreshAll(c);
    ShiftProgressWidgetProvider.refreshAll(c);
    if(!active){m.cancel(ID);scheduleTick(c,false);scheduleLiveTick(c,false);return;}
    if(Build.VERSION.SDK_INT>=33&&c.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)return;
@@ -297,7 +334,7 @@ python - <<'PY'
 from pathlib import Path
 p=Path("android/app/src/main/AndroidManifest.xml"); text=p.read_text()
 r='''        <receiver android:name=".ClockWidgetProvider" android:exported="true" android:label="WHT Clock In &amp; Out"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_clock_widget_info" /></receiver>
-        <receiver android:name=".NextShiftWidgetProvider" android:exported="true" android:label="WHT Next Scheduled Shift"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_next_shift_widget_info" /></receiver>
+        <receiver android:name=".NextShiftWidgetProvider" android:exported="true" android:label="WHT Upcoming Shifts"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_next_shift_widget_info" /></receiver>
         <receiver android:name=".ShiftProgressWidgetProvider" android:exported="true" android:label="WHT Shift Progress"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_shift_progress_widget_info" /></receiver>
         <receiver android:name=".WhtNotificationTickReceiver" android:exported="false" />
 '''
