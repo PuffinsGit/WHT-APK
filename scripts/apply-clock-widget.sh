@@ -238,6 +238,10 @@ final class WhtClockNotification {
     .setVisibility(Notification.VISIBILITY_PUBLIC)
     .addAction(new Notification.Action.Builder(R.drawable.wht_notification_small,"Clock Out",clockOutPi).build())
     .addAction(new Notification.Action.Builder(R.drawable.wht_notification_small,"Open WHT",pi).build());
+   // Android 16's system ProgressStyle is what lets supported lock-screen
+   // surfaces (including Samsung's Now Bar) render progress at the right.
+   // Reflection keeps this source safe on older Android releases.
+   applySystemProgressStyle(b,shiftPercent);
    // Request Android 16 Live Update promotion. Samsung maps eligible promoted
    // ongoing notifications onto its Now Bar surface.
    requestPromotion(b);
@@ -246,6 +250,15 @@ final class WhtClockNotification {
    m.notify(ID,b.build());
    scheduleTick(c,true);
    scheduleLiveTick(c,true);
+  }catch(Exception ignored){}
+ }
+ static void applySystemProgressStyle(Notification.Builder b,int percent){
+  if(Build.VERSION.SDK_INT<36)return;
+  try{
+   Class<?> progressStyleClass=Class.forName("android.app.Notification$ProgressStyle");
+   Object progressStyle=progressStyleClass.getDeclaredConstructor().newInstance();
+   progressStyleClass.getMethod("setProgress",int.class).invoke(progressStyle,Math.max(0,Math.min(100,percent)));
+   b.setStyle((Notification.Style)progressStyle);
   }catch(Exception ignored){}
  }
  static void requestPromotion(Notification.Builder b){

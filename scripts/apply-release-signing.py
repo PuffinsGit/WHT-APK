@@ -22,7 +22,7 @@ elif 'versionCode' in text and 'WHT_VERSION_CODE' not in text:
     text = re.sub(r'versionCode\s+\d+', 'versionCode (System.currentTimeMillis() / 1000).toInteger()', text, count=1)
 
 # Keep the installed Android app version aligned with the visible WHT version.
-version_name = os.environ.get('WHT_VERSION_NAME', '2.98')
+version_name = os.environ.get('WHT_VERSION_NAME', '2.99')
 if re.search(r'versionName\s+["\'][^"\']+["\']', text):
     text = re.sub(r'versionName\s+["\'][^"\']+["\']', f'versionName "{version_name}"', text, count=1)
 else:

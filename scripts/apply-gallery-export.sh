@@ -97,6 +97,7 @@ cat > "$JAVA_DIR/GallerySaverPlugin.java" <<'JAVA'
 package com.workedhourstracker.app;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.ContentValues;
