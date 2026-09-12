@@ -222,7 +222,7 @@ final class WhtClockNotification {
    b.setSmallIcon(R.drawable.wht_notification_small)
     .setLargeIcon(BitmapFactory.decodeResource(c.getResources(),R.drawable.wht_notification_logo))
     .setContentTitle("Clocked In At "+startLabel)
-    .setContentText(dayDate+" • "+elapsedLabel)
+    .setContentText(elapsedLabel)
     .setSubText(progressLabel)
     .setProgress(Math.max(100,shiftPercent),shiftPercent,false)
     .setWhen(startedAt)
