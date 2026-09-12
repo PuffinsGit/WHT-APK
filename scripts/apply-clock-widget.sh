@@ -241,7 +241,7 @@ final class WhtClockNotification {
    // Request Android 16 Live Update promotion. Samsung maps eligible promoted
    // ongoing notifications onto its Now Bar surface.
    requestPromotion(b);
-   setShortStatus(b,dayDate+" • "+elapsedLabel+" • "+shiftPercent+"%");
+   setShortStatus(b,elapsedLabel);
    if(Build.VERSION.SDK_INT>=26)b.setBadgeIconType(Notification.BADGE_ICON_SMALL);
    m.notify(ID,b.build());
    scheduleTick(c,true);
