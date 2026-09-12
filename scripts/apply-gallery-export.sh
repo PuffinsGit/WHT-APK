@@ -46,6 +46,7 @@ package com.workedhourstracker.app;
 import android.os.Bundle;
 import android.os.Build;
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -106,6 +107,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.DocumentsContract;
 import android.util.Base64;
 
 import com.getcapacitor.JSObject;
@@ -116,7 +118,9 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
+import com.getcapacitor.annotation.ActivityCallback;
 
+import androidx.activity.result.ActivityResult;
 import androidx.core.content.FileProvider;
 
 import java.io.ByteArrayOutputStream;
@@ -137,6 +141,7 @@ public class GallerySaverPlugin extends Plugin {
     private static final String WIDGET_PREFS = "wht_device_save";
     private static final String WIDGET_DATA = "app_data";
     private static final String SAVE_NAME = "wht-save.json";
+    private static final String BACKUP_TREE_URI = "backup_tree_uri";
 
     @PluginMethod
     public void playClockTone(PluginCall call) {
@@ -144,7 +149,57 @@ public class GallerySaverPlugin extends Plugin {
         call.resolve();
     }
     private static final String SAVE_MIME = "application/json";
-    private static final String SAVE_FOLDER = "Download/WHT/";
+    private static final String LEGACY_SAVE_FOLDER = "Download/WHT/";
+
+    @PluginMethod
+    public void getBackupFolderStatus(PluginCall call) {
+        String uri = getContext().getSharedPreferences(WIDGET_PREFS, 0).getString(BACKUP_TREE_URI, "");
+        JSObject result = new JSObject();
+        result.put("configured", uri != null && !uri.isEmpty());
+        result.put("folder", uri == null || uri.isEmpty() ? "" : "Documents/WHT");
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void chooseBackupFolder(PluginCall call) {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+        startActivityForResult(call, intent, "backupFolderSelected");
+    }
+
+    @ActivityCallback
+    private void backupFolderSelected(PluginCall call, ActivityResult activityResult) {
+        if (call == null) return;
+        Intent intent = activityResult.getData();
+        if (activityResult.getResultCode() != Activity.RESULT_OK || intent == null || intent.getData() == null) {
+            call.reject("Documents folder selection was cancelled.");
+            return;
+        }
+        Uri treeUri = intent.getData();
+        try {
+            int flags = intent.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            getContext().getContentResolver().takePersistableUriPermission(treeUri, flags);
+            getContext().getSharedPreferences(WIDGET_PREFS, 0).edit().putString(BACKUP_TREE_URI, treeUri.toString()).commit();
+            String data = getContext().getSharedPreferences(WIDGET_PREFS, 0).getString(WIDGET_DATA, "");
+            String recovered = "";
+            if (data != null && !data.isEmpty()) {
+                savePublicDocument(data);
+            } else {
+                recovered = loadPublicDocument();
+                if (recovered != null && !recovered.isEmpty()) {
+                    getContext().getSharedPreferences(WIDGET_PREFS, 0).edit().putString(WIDGET_DATA, recovered).commit();
+                }
+            }
+            JSObject result = new JSObject();
+            result.put("configured", true);
+            result.put("folder", "Documents/WHT");
+            result.put("data", recovered == null ? "" : recovered);
+            call.resolve(result);
+        } catch (Exception error) {
+            call.reject("Could not use the selected Documents folder: " + error.getMessage(), error);
+        }
+    }
 
     @PluginMethod
     public void saveAppData(PluginCall call) {
@@ -205,7 +260,9 @@ public class GallerySaverPlugin extends Plugin {
 
     private void savePublicDocument(String data) throws Exception {
         ContentResolver resolver = getContext().getContentResolver();
-        Uri existing = findPublicDocument(resolver);
+        Uri folder = getWhtDocumentFolder(true);
+        if (folder == null) throw new Exception("Documents folder permission has not been granted.");
+        Uri existing = findTreeChild(folder, SAVE_NAME, false);
         if (existing != null) {
             try (OutputStream stream = resolver.openOutputStream(existing, "wt")) {
                 if (stream == null) throw new Exception("Android could not open the backup file.");
@@ -214,11 +271,7 @@ public class GallerySaverPlugin extends Plugin {
             return;
         }
 
-        ContentValues values = new ContentValues();
-        values.put(MediaStore.Downloads.DISPLAY_NAME, SAVE_NAME);
-        values.put(MediaStore.Downloads.MIME_TYPE, SAVE_MIME);
-        values.put(MediaStore.Downloads.RELATIVE_PATH, SAVE_FOLDER);
-        Uri uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+        Uri uri = DocumentsContract.createDocument(resolver, folder, SAVE_MIME, SAVE_NAME);
         if (uri == null) throw new Exception("Android could not create the backup file.");
         try (OutputStream stream = resolver.openOutputStream(uri)) {
             if (stream == null) throw new Exception("Android could not open the backup file.");
@@ -228,7 +281,9 @@ public class GallerySaverPlugin extends Plugin {
 
     private String loadPublicDocument() throws Exception {
         ContentResolver resolver = getContext().getContentResolver();
-        Uri uri = findPublicDocument(resolver);
+        Uri folder = getWhtDocumentFolder(false);
+        Uri uri = folder == null ? null : findTreeChild(folder, SAVE_NAME, false);
+        if (uri == null) uri = findLegacyPublicDocument(resolver);
         if (uri == null) return "";
         try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
              InputStreamWithBuffer stream = new InputStreamWithBuffer(resolver.openInputStream(uri))) {
@@ -240,12 +295,44 @@ public class GallerySaverPlugin extends Plugin {
         }
     }
 
-    private Uri findPublicDocument(ContentResolver resolver) {
+    private Uri getWhtDocumentFolder(boolean create) throws Exception {
+        String value = getContext().getSharedPreferences(WIDGET_PREFS, 0).getString(BACKUP_TREE_URI, "");
+        if (value == null || value.isEmpty()) return null;
+        Uri tree = Uri.parse(value);
+        String rootId = DocumentsContract.getTreeDocumentId(tree);
+        Uri root = DocumentsContract.buildDocumentUriUsingTree(tree, rootId);
+        String rootName = documentName(root);
+        if ("WHT".equalsIgnoreCase(rootName)) return root;
+        Uri folder = findTreeChild(root, "WHT", true);
+        if (folder == null && create) folder = DocumentsContract.createDocument(getContext().getContentResolver(), root, DocumentsContract.Document.MIME_TYPE_DIR, "WHT");
+        return folder;
+    }
+
+    private String documentName(Uri document) {
+        String[] projection = { DocumentsContract.Document.COLUMN_DISPLAY_NAME };
+        try (Cursor cursor = getContext().getContentResolver().query(document, projection, null, null, null)) {
+            return cursor != null && cursor.moveToFirst() ? cursor.getString(0) : "";
+        }
+    }
+
+    private Uri findTreeChild(Uri parent, String name, boolean directory) {
+        String parentId = DocumentsContract.getDocumentId(parent);
+        Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(parent, parentId);
+        String[] projection = { DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE };
+        try (Cursor cursor = getContext().getContentResolver().query(children, projection, null, null, null)) {
+            while (cursor != null && cursor.moveToNext()) {
+                boolean typeMatches = directory == DocumentsContract.Document.MIME_TYPE_DIR.equals(cursor.getString(2));
+                if (name.equals(cursor.getString(1)) && typeMatches) return DocumentsContract.buildDocumentUriUsingTree(parent, cursor.getString(0));
+            }
+        }
+        return null;
+    }
+
+    private Uri findLegacyPublicDocument(ContentResolver resolver) {
         Uri collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
         String[] projection = { MediaStore.Downloads._ID };
-        String selection = MediaStore.Downloads.DISPLAY_NAME + "=? AND "
-            + MediaStore.Downloads.RELATIVE_PATH + "=?";
-        String[] args = { SAVE_NAME, SAVE_FOLDER };
+        String selection = MediaStore.Downloads.DISPLAY_NAME + "=? AND " + MediaStore.Downloads.RELATIVE_PATH + "=?";
+        String[] args = { SAVE_NAME, LEGACY_SAVE_FOLDER };
         try (Cursor cursor = resolver.query(collection, projection, selection, args, null)) {
             if (cursor != null && cursor.moveToFirst()) {
                 long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID));
@@ -256,8 +343,8 @@ public class GallerySaverPlugin extends Plugin {
     }
 
     private void saveLegacyDocument(String data) throws Exception {
-        File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "WHT");
-        if (!folder.exists() && !folder.mkdirs()) throw new Exception("Could not create Downloads/WHT.");
+        File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "WHT");
+        if (!folder.exists() && !folder.mkdirs()) throw new Exception("Could not create Documents/WHT.");
         File file = new File(folder, SAVE_NAME);
         try (FileOutputStream stream = new FileOutputStream(file)) {
             stream.write(data.getBytes(StandardCharsets.UTF_8));
@@ -346,7 +433,8 @@ public class GallerySaverPlugin extends Plugin {
     }
 
     private String loadLegacyDocument() throws Exception {
-        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "WHT/" + SAVE_NAME);
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "WHT/" + SAVE_NAME);
+        if (!file.exists()) file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "WHT/" + SAVE_NAME);
         if (!file.exists()) return "";
         try (FileInputStream stream = new FileInputStream(file);
              ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
