@@ -865,18 +865,6 @@
         color: var(--muted);
         font-size: 21px;
       }
-      .settings-group {
-        display: grid;
-        gap: 10px;
-      }
-      .settings-group-title {
-        padding: 4px 4px 0;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-      }
       .sidebar-copyright .app-version,
       .copyright .app-version {
         display: block;
@@ -1572,17 +1560,6 @@
       </nav>
       <div class="sidebar-label" id="sidebarToolsLabel">Tools</div>
       <div id="sidebarTools"></div>
-      <details class="export-menu sidebar-actions" id="sidebarImportMenu">
-        <summary>Import</summary>
-        <div class="export-options">
-          <details class="export-submenu" id="sidebarTxtImportMenu">
-            <summary>TXT</summary>
-            <div class="export-options">
-              <button type="button" id="sidebarImportTxt">Import .TXT</button>
-            </div>
-          </details>
-        </div>
-      </details>
       <div id="scheduleActionsSlot" hidden></div>
       <div class="sidebar-footer">
         <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.6</span></div>
@@ -1764,22 +1741,6 @@
         closeSidebar();
         openSettingsHub();
       };
-      document.getElementById("sidebarImportTxt").onclick = () => {
-        pendingImportTarget = activeScreen === "schedule" ? "schedule" : "work";
-        closeSidebar();
-        document.getElementById("txtInput").click();
-      };
-      document.getElementById("sidebarImportMenu").addEventListener("toggle", (e) => {
-        if (e.target.open) {
-          const exportMenu = document.getElementById("exportMenu");
-          if (exportMenu) exportMenu.removeAttribute("open");
-        }
-      });
-      document.getElementById("sidebarTxtImportMenu").addEventListener("toggle", (e) => {
-        if (e.target.open) {
-          // Keep the nested TXT menu as the only open import format.
-        }
-      });
       document.getElementById("bottomClearWeek").onclick = clearCurrentWeek;
       document.getElementById("bottomClearDay").onclick = clearCurrentDay;
       sidebar.addEventListener("click", (event) => {
@@ -2536,13 +2497,11 @@
         showModal(`<h2>Settings</h2><p>Manage settings for Worked Hours and Schedule.</p>
           <div class="settings-hub">
             <button type="button" id="settingsBackground">Background Colour</button>
-            <div class="settings-group">
-              <div class="settings-group-title">Backup</div>
-              <button type="button" id="settingsExportBackup">Export App Backup</button>
-              <button type="button" id="settingsImportBackup">Import App Backup</button>
-            </div>
             <button type="button" id="settingsBackupLocation">Backup Location</button>
             <button type="button" id="settingsBreaks">Breaks</button>
+            <button type="button" id="settingsImport">Import from .txt</button>
+            <button type="button" id="settingsExportBackup">Export App Backup</button>
+            <button type="button" id="settingsImportBackup">Import App Backup</button>
             <button type="button" id="settingsPayday">Payday</button>
             <button type="button" id="settingsRates">Rates</button>
             <button type="button" id="settingsReportIssue">Report Issue</button>
@@ -2554,6 +2513,11 @@
         document.getElementById("settingsRates").onclick = openRatesSettings;
         document.getElementById("settingsBackground").onclick = openBackgroundSettings;
         document.getElementById("settingsBackupLocation").onclick = () => chooseBackupLocation(true);
+        document.getElementById("settingsImport").onclick = () => {
+          pendingImportTarget = activeScreen === "schedule" ? "schedule" : "work";
+          closeModal();
+          document.getElementById("txtInput").click();
+        };
         document.getElementById("settingsExportBackup").onclick = async () => {
           await exportAppBackup();
           openSettingsHub();
@@ -2599,14 +2563,7 @@
           const blob = new Blob([json], { type: "application/json" });
 
           // Desktop browsers can use a native Save As dialog when available.
-          const nativeBackup = window.Capacitor?.Plugins?.GallerySaver;
-          if (nativeBackup?.exportBackup) {
-            // Android: use the system Save As picker so the user chooses exactly
-            // where the portable .whtbackup file is stored. Nothing is silently
-            // written into app-private storage.
-            await nativeBackup.exportBackup({ data: json, fileName });
-          } else if (typeof window.showSaveFilePicker === "function") {
-            // Desktop browsers: use a native Save As dialog when available.
+          if (typeof window.showSaveFilePicker === "function") {
             const handle = await window.showSaveFilePicker({
               suggestedName: fileName,
               types: [{
@@ -2618,7 +2575,7 @@
             await writable.write(blob);
             await writable.close();
           } else {
-            // Fallback for browsers without the File System Access API.
+            // Works as a normal browser download and is also suitable for Android WebView.
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
@@ -2629,7 +2586,7 @@
             link.remove();
             setTimeout(() => URL.revokeObjectURL(url), 1000);
           }
-          toast("WHT backup saved");
+          toast("WHT backup exported");
         } catch (error) {
           if (error?.name !== "AbortError") {
             toast("Could not export backup: " + (error.message || error));
@@ -2753,10 +2710,7 @@
         document.getElementById("txtMenu").removeAttribute("open");
       }
       function closeImportMenu() {
-        const menu = document.getElementById("sidebarImportMenu");
-        if (menu) menu.removeAttribute("open");
-        const txt = document.getElementById("sidebarTxtImportMenu");
-        if (txt) txt.removeAttribute("open");
+        // Import now lives in Settings.
       }
       function closeClearMenu() {
         // Clear actions now live in the page footer rather than a menu.
@@ -3383,7 +3337,8 @@
           closeClearMenu();
           const settings = document.getElementById("scheduleSettingsMenu");
           if (settings) settings.removeAttribute("open");
-          closeImportMenu();
+          const importMenu = document.getElementById("scheduleImportMenu");
+          if (importMenu) importMenu.removeAttribute("open");
         }
         if (e.target && e.target.id === "schedulePngMenu" && e.target.open) {
           const email = document.getElementById("scheduleEmailMenu");
@@ -3403,23 +3358,34 @@
           const email = document.getElementById("scheduleEmailMenu");
           if (email) email.removeAttribute("open");
         }
+        if (e.target && e.target.id === "scheduleImportMenu" && e.target.open) {
+          closeClearMenu();
+          const exportMenu = document.getElementById("scheduleExportMenu");
+          if (exportMenu) exportMenu.removeAttribute("open");
+          const email = document.getElementById("scheduleEmailMenu");
+          if (email) email.removeAttribute("open");
+          const settings = document.getElementById("scheduleSettingsMenu");
+          if (settings) settings.removeAttribute("open");
+        }
         if (e.target && e.target.id === "scheduleSettingsMenu" && e.target.open) {
           const exportMenu = document.getElementById("scheduleExportMenu");
           if (exportMenu) exportMenu.removeAttribute("open");
           const email = document.getElementById("scheduleEmailMenu");
           if (email) email.removeAttribute("open");
-          closeImportMenu();
+          const importMenu = document.getElementById("scheduleImportMenu");
+          if (importMenu) importMenu.removeAttribute("open");
         }
       });
       document.addEventListener("click", (e) => {
         const menus = [
           document.getElementById("exportMenu"),
           document.getElementById("emailMenu"),
-          document.getElementById("sidebarImportMenu"),
+          document.getElementById("importMenu"),
           document.getElementById("settingsMenu"),
           document.getElementById("scheduleExportMenu"),
           document.getElementById("schedulePngMenu"),
           document.getElementById("scheduleEmailMenu"),
+          document.getElementById("scheduleImportMenu"),
           document.getElementById("scheduleSettingsMenu"),
         ].filter(Boolean);
         menus.forEach((menu) => {
@@ -3560,7 +3526,8 @@
       }
 
       function closeScheduleImportMenu() {
-        closeImportMenu();
+        const menu = document.getElementById("scheduleImportMenu");
+        if (menu) menu.removeAttribute("open");
       }
 
       function scheduleRowsForRange(start, end) {
