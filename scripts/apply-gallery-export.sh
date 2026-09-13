@@ -259,6 +259,64 @@ public class GallerySaverPlugin extends Plugin {
         }
     }
 
+    @PluginMethod
+    public void exportBackup(PluginCall call) {
+        String data = call.getString("data");
+        String fileName = call.getString("fileName", "WHT-Backup.whtbackup");
+        if (data == null) {
+            call.reject("Backup data was missing.");
+            return;
+        }
+        fileName = fileName.replaceAll("[^A-Za-z0-9._-]", "-");
+        if (!fileName.toLowerCase().endsWith(".whtbackup")) fileName += ".whtbackup";
+
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/octet-stream");
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        // Keep the data on the pending Capacitor call until the user chooses a
+        // destination in Android's system Save As picker.
+        startActivityForResult(call, intent, "backupFileSelected");
+        getContext().getSharedPreferences(WIDGET_PREFS, 0).edit()
+            .putString("pending_backup_data", data).putString("pending_backup_name", fileName).apply();
+    }
+
+    @ActivityCallback
+    private void backupFileSelected(PluginCall call, ActivityResult activityResult) {
+        if (call == null) return;
+        Intent intent = activityResult.getData();
+        if (activityResult.getResultCode() != Activity.RESULT_OK || intent == null || intent.getData() == null) {
+            call.reject("Backup save was cancelled.");
+            return;
+        }
+        try {
+            Uri uri = intent.getData();
+            String data = getContext().getSharedPreferences(WIDGET_PREFS, 0)
+                .getString("pending_backup_data", "");
+            if (data.isEmpty()) throw new Exception("Backup data was not available.");
+            int flags = intent.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            if (flags != 0) {
+                try { getContext().getContentResolver().takePersistableUriPermission(uri, flags); } catch (Exception ignored) {}
+            }
+            try (OutputStream stream = getContext().getContentResolver().openOutputStream(uri, "wt")) {
+                if (stream == null) throw new Exception("Android could not open the selected file.");
+                stream.write(data.getBytes(StandardCharsets.UTF_8));
+                stream.flush();
+            }
+            String savedName = getContext().getSharedPreferences(WIDGET_PREFS, 0)
+                .getString("pending_backup_name", "WHT-Backup.whtbackup");
+            getContext().getSharedPreferences(WIDGET_PREFS, 0).edit()
+                .remove("pending_backup_data").remove("pending_backup_name").apply();
+            JSObject result = new JSObject();
+            result.put("uri", uri.toString());
+            result.put("fileName", savedName);
+            call.resolve(result);
+        } catch (Exception error) {
+            call.reject("Could not save the WHT backup: " + error.getMessage(), error);
+        }
+    }
+
     private void savePublicDocument(String data) throws Exception {
         ContentResolver resolver = getContext().getContentResolver();
         Uri folder = getWhtDocumentFolder(true);

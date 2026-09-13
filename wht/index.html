@@ -209,10 +209,15 @@
       }
       .home-widget-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
       .home-widget-title { font-size: 16px; font-weight: 900; }
-      .home-widget-controls { display:flex; align-items:center; gap:6px; }
-      .home-widget-move,
-      .home-widget-remove { width:32px; height:32px; min-width:32px; padding:0; border-radius:10px; color:var(--muted); font-size:17px; }
-      .home-widget-move:disabled { opacity:.28; cursor:default; }
+      .home-widget-controls { position:relative; display:flex; align-items:center; }
+      .home-widget-menu-button { width:34px; height:34px; min-width:34px; padding:0; border-radius:10px; color:var(--muted); font-size:20px; line-height:1; }
+      .home-widget-menu-button:hover { color:var(--text); }
+      .home-widget-menu { position:absolute; z-index:20; top:40px; right:0; min-width:145px; padding:6px; display:none; gap:3px; background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:0 12px 28px rgba(0,0,0,.24); }
+      .home-widget-menu.open { display:grid; }
+      .home-widget-menu button { width:100%; padding:10px 12px; border:0; background:transparent; color:var(--text); border-radius:8px; text-align:left; font-size:13px; }
+      .home-widget-menu button:hover { background:var(--panel2); }
+      .home-widget-menu button:disabled { opacity:.35; cursor:default; }
+      .home-widget-menu button[data-remove-widget] { color:#e25b6d; }
       .home-widget-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
       .home-widget-stat { padding:14px; border:1px solid var(--line); border-radius:13px; background:var(--panel2); }
       .home-widget-label { color:var(--muted); font-size:10px; font-weight:850; letter-spacing:.08em; text-transform:uppercase; }
@@ -859,6 +864,18 @@
         content: "›";
         color: var(--muted);
         font-size: 21px;
+      }
+      .settings-group {
+        display: grid;
+        gap: 10px;
+      }
+      .settings-group-title {
+        padding: 4px 4px 0;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .08em;
       }
       .sidebar-copyright .app-version,
       .copyright .app-version {
@@ -1555,9 +1572,20 @@
       </nav>
       <div class="sidebar-label" id="sidebarToolsLabel">Tools</div>
       <div id="sidebarTools"></div>
+      <details class="export-menu sidebar-actions" id="sidebarImportMenu">
+        <summary>Import</summary>
+        <div class="export-options">
+          <details class="export-submenu" id="sidebarTxtImportMenu">
+            <summary>TXT</summary>
+            <div class="export-options">
+              <button type="button" id="sidebarImportTxt">Import .TXT</button>
+            </div>
+          </details>
+        </div>
+      </details>
       <div id="scheduleActionsSlot" hidden></div>
       <div class="sidebar-footer">
-        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.5</span></div>
+        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.6</span></div>
         <div class="sidebar-footer-actions">
           <button type="button" class="sidebar-settings-button" id="sidebarSettingsBtn" aria-label="Open settings" title="Settings">⚙</button>
         </div>
@@ -1662,7 +1690,7 @@
       <div class="note" id="workNote">
         Your entries are saved automatically to this device. A backup copy is also kept in Documents/WHT so it can survive an app reinstall.
       </div>
-      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.5</span></footer>
+      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.6</span></footer>
     </div>
 
     <div class="modalback" id="modalBack">
@@ -1673,6 +1701,12 @@
       id="txtInput"
       type="file"
       accept=".txt,text/plain"
+      hidden
+    />
+    <input
+      id="backupInput"
+      type="file"
+      accept=".whtbackup,.json,application/json"
       hidden
     />
     <input
@@ -1730,6 +1764,22 @@
         closeSidebar();
         openSettingsHub();
       };
+      document.getElementById("sidebarImportTxt").onclick = () => {
+        pendingImportTarget = activeScreen === "schedule" ? "schedule" : "work";
+        closeSidebar();
+        document.getElementById("txtInput").click();
+      };
+      document.getElementById("sidebarImportMenu").addEventListener("toggle", (e) => {
+        if (e.target.open) {
+          const exportMenu = document.getElementById("exportMenu");
+          if (exportMenu) exportMenu.removeAttribute("open");
+        }
+      });
+      document.getElementById("sidebarTxtImportMenu").addEventListener("toggle", (e) => {
+        if (e.target.open) {
+          // Keep the nested TXT menu as the only open import format.
+        }
+      });
       document.getElementById("bottomClearWeek").onclick = clearCurrentWeek;
       document.getElementById("bottomClearDay").onclick = clearCurrentDay;
       sidebar.addEventListener("click", (event) => {
@@ -2052,7 +2102,7 @@
       }
       setInterval(refreshHomeShiftProgress, 1000);
       function homeWidgetMarkup(type, index) {
-        const controls = `<div class="home-widget-controls"><button type="button" class="home-widget-move" data-move-widget="${type}" data-direction="up" aria-label="Move ${HOME_WIDGETS[type].title} up" title="Move up" ${index === 0 ? "disabled" : ""}>↑</button><button type="button" class="home-widget-move" data-move-widget="${type}" data-direction="down" aria-label="Move ${HOME_WIDGETS[type].title} down" title="Move down" ${index === state.homeWidgets.length - 1 ? "disabled" : ""}>↓</button><button type="button" class="home-widget-remove" data-remove-widget="${type}" aria-label="Remove ${HOME_WIDGETS[type].title}" title="Remove widget">×</button></div>`;
+        const controls = `<div class="home-widget-controls"><button type="button" class="home-widget-menu-button" data-widget-menu-toggle="${type}" aria-label="Widget options" aria-expanded="false" title="Widget options">⋮</button><div class="home-widget-menu" data-widget-menu="${type}"><button type="button" data-move-widget="${type}" data-direction="up" ${index === 0 ? "disabled" : ""}>Move Up</button><button type="button" data-move-widget="${type}" data-direction="down" ${index === state.homeWidgets.length - 1 ? "disabled" : ""}>Move Down</button><button type="button" data-remove-widget="${type}">Remove</button></div></div>`;
         if (type === "clock") {
           return `<article class="home-widget"><div class="home-widget-head"><div class="home-widget-title">Clock In / Out</div>${controls}</div><div class="home-widget-actions"><button type="button" class="clock-in" data-home-clock="start">Clock In</button><button type="button" class="clock-out" data-home-clock="finish">Clock Out</button></div></article>`;
         }
@@ -2094,6 +2144,10 @@
         }
         return `<article class="home-widget"><div class="home-widget-head"><div class="home-widget-title">Quick Access</div>${controls}</div><div class="home-widget-actions three"><button type="button" data-home-page="work">Worked Hours</button><button type="button" data-home-page="schedule">Schedule</button><button type="button" data-home-page="calendar">Calendar</button></div></article>`;
       }
+      document.addEventListener("click", () => {
+        document.querySelectorAll("[data-widget-menu]").forEach((menu) => menu.classList.remove("open"));
+        document.querySelectorAll("[data-widget-menu-toggle]").forEach((button) => button.setAttribute("aria-expanded", "false"));
+      });
       function renderHomeDashboard() {
         const list = document.getElementById("homeWidgetList");
         if (!list) return;
@@ -2103,12 +2157,24 @@
           list.insertAdjacentHTML("beforeend", `<button type="button" class="home-widget-add" id="addHomeWidget"><span aria-hidden="true">+</span>Add Widget</button>`);
           document.getElementById("addHomeWidget").onclick = openHomeWidgetPicker;
         }
-        list.querySelectorAll("[data-remove-widget]").forEach((button) => button.onclick = () => {
+        list.querySelectorAll("[data-widget-menu-toggle]").forEach((button) => button.onclick = (event) => {
+          event.stopPropagation();
+          const target = list.querySelector(`[data-widget-menu="${button.dataset.widgetMenuToggle}"]`);
+          list.querySelectorAll("[data-widget-menu]").forEach((item) => item.classList.remove("open"));
+          list.querySelectorAll("[data-widget-menu-toggle]").forEach((item) => item.setAttribute("aria-expanded", "false"));
+          if (target) {
+            target.classList.toggle("open");
+            button.setAttribute("aria-expanded", target.classList.contains("open") ? "true" : "false");
+          }
+        });
+        list.querySelectorAll("[data-remove-widget]").forEach((button) => button.onclick = (event) => {
+          event.stopPropagation();
           state.homeWidgets = state.homeWidgets.filter((widget) => widget !== button.dataset.removeWidget);
           save();
           renderHomeDashboard();
         });
-        list.querySelectorAll("[data-move-widget]").forEach((button) => button.onclick = () => {
+        list.querySelectorAll("[data-move-widget]").forEach((button) => button.onclick = (event) => {
+          event.stopPropagation();
           const index = state.homeWidgets.indexOf(button.dataset.moveWidget);
           const nextIndex = button.dataset.direction === "up" ? index - 1 : index + 1;
           if (index < 0 || nextIndex < 0 || nextIndex >= state.homeWidgets.length) return;
@@ -2116,6 +2182,7 @@
           save();
           renderHomeDashboard();
         });
+        list.querySelectorAll("[data-widget-menu]").forEach((menu) => menu.onclick = (event) => event.stopPropagation());
         list.querySelectorAll("[data-home-clock]").forEach((button) => button.onclick = () => clockCurrentTime(button.dataset.homeClock));
         list.querySelectorAll("[data-home-page]").forEach((button) => button.onclick = () => {
           if (button.dataset.homePage === "schedule") showScheduleScreen();
@@ -2469,9 +2536,13 @@
         showModal(`<h2>Settings</h2><p>Manage settings for Worked Hours and Schedule.</p>
           <div class="settings-hub">
             <button type="button" id="settingsBackground">Background Colour</button>
+            <div class="settings-group">
+              <div class="settings-group-title">Backup</div>
+              <button type="button" id="settingsExportBackup">Export App Backup</button>
+              <button type="button" id="settingsImportBackup">Import App Backup</button>
+            </div>
             <button type="button" id="settingsBackupLocation">Backup Location</button>
             <button type="button" id="settingsBreaks">Breaks</button>
-            <button type="button" id="settingsImport">Import from .txt</button>
             <button type="button" id="settingsPayday">Payday</button>
             <button type="button" id="settingsRates">Rates</button>
             <button type="button" id="settingsReportIssue">Report Issue</button>
@@ -2483,10 +2554,13 @@
         document.getElementById("settingsRates").onclick = openRatesSettings;
         document.getElementById("settingsBackground").onclick = openBackgroundSettings;
         document.getElementById("settingsBackupLocation").onclick = () => chooseBackupLocation(true);
-        document.getElementById("settingsImport").onclick = () => {
-          pendingImportTarget = activeScreen === "schedule" ? "schedule" : "work";
+        document.getElementById("settingsExportBackup").onclick = async () => {
+          await exportAppBackup();
+          openSettingsHub();
+        };
+        document.getElementById("settingsImportBackup").onclick = () => {
           closeModal();
-          document.getElementById("txtInput").click();
+          document.getElementById("backupInput").click();
         };
         document.getElementById("settingsPayday").onclick = openPaydaySettings;
         document.getElementById("settingsReportIssue").onclick = showReportIssueScreen;
@@ -2498,6 +2572,124 @@
           toast(`${state.use24Hour ? "24" : "12"}-hour time enabled`);
         };
       }
+      function buildAppBackup() {
+        // Keep the backup portable between Android and the future PC version.
+        // Only app-owned state is exported; browser/device-specific storage is not.
+        return {
+          format: "WHT_BACKUP",
+          formatVersion: 1,
+          app: "WorkedHoursTracker",
+          appVersion: "ALPHA v1.6",
+          exportedAt: new Date().toISOString(),
+          data: JSON.parse(JSON.stringify(state)),
+        };
+      }
+
+      function backupFileName() {
+        const stamp = new Date().toISOString().replace(/[:.]/g, "-").replace("Z", "");
+        return `WHT-Backup-${stamp}.whtbackup`;
+      }
+
+      async function exportAppBackup() {
+        try {
+          save();
+          const backup = buildAppBackup();
+          const json = JSON.stringify(backup, null, 2);
+          const fileName = backupFileName();
+          const blob = new Blob([json], { type: "application/json" });
+
+          // Desktop browsers can use a native Save As dialog when available.
+          const nativeBackup = window.Capacitor?.Plugins?.GallerySaver;
+          if (nativeBackup?.exportBackup) {
+            // Android: use the system Save As picker so the user chooses exactly
+            // where the portable .whtbackup file is stored. Nothing is silently
+            // written into app-private storage.
+            await nativeBackup.exportBackup({ data: json, fileName });
+          } else if (typeof window.showSaveFilePicker === "function") {
+            // Desktop browsers: use a native Save As dialog when available.
+            const handle = await window.showSaveFilePicker({
+              suggestedName: fileName,
+              types: [{
+                description: "WorkedHoursTracker Backup",
+                accept: { "application/json": [".whtbackup", ".json"] },
+              }],
+            });
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+          } else {
+            // Fallback for browsers without the File System Access API.
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = fileName;
+            link.style.display = "none";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }
+          toast("WHT backup saved");
+        } catch (error) {
+          if (error?.name !== "AbortError") {
+            toast("Could not export backup: " + (error.message || error));
+          }
+        }
+      }
+
+      function importAppBackupFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const backup = JSON.parse(String(reader.result || ""));
+              if (!backup || backup.format !== "WHT_BACKUP") {
+                throw new Error("This is not a WHT backup file.");
+              }
+              if (Number(backup.formatVersion || 0) !== 1) {
+                throw new Error("This WHT backup version is not supported.");
+              }
+              if (!backup.data || typeof backup.data !== "object") {
+                throw new Error("The backup does not contain app data.");
+              }
+              resolve(backup);
+            } catch (error) {
+              reject(error);
+            }
+          };
+          reader.onerror = () => reject(new Error("The backup file could not be read."));
+          reader.readAsText(file);
+        });
+      }
+
+      document.getElementById("backupInput").onchange = async (e) => {
+        const file = e.target.files[0];
+        e.target.value = "";
+        if (!file) return;
+        try {
+          const backup = await importAppBackupFile(file);
+          const confirmed = window.confirm(
+            "Import this WHT backup? This will replace the current saved hours, Schedule entries and app settings on this device."
+          );
+          if (!confirmed) return;
+
+          Object.keys(state).forEach((key) => delete state[key]);
+          Object.assign(state, backup.data);
+          normaliseState(state);
+
+          // Theme still follows the device/system mode used by this build.
+          state.themeMode = systemTheme.matches ? "light" : "dark";
+          applyThemeMode();
+          save();
+          refreshScreen();
+          toast("WHT backup imported successfully");
+        } catch (error) {
+          toast("Could not import backup: " + (error.message || error));
+        }
+      };
+
+      window.exportAppBackup = exportAppBackup;
+
       async function chooseBackupLocation(returnToSettings = false) {
         const plugin = window.Capacitor?.Plugins?.GallerySaver;
         if (!plugin?.chooseBackupFolder) {
@@ -2561,7 +2753,10 @@
         document.getElementById("txtMenu").removeAttribute("open");
       }
       function closeImportMenu() {
-        // Import now lives in Settings.
+        const menu = document.getElementById("sidebarImportMenu");
+        if (menu) menu.removeAttribute("open");
+        const txt = document.getElementById("sidebarTxtImportMenu");
+        if (txt) txt.removeAttribute("open");
       }
       function closeClearMenu() {
         // Clear actions now live in the page footer rather than a menu.
@@ -2622,7 +2817,7 @@
         context.textAlign = "right";
         context.fillText("© 2026 Mark Breddy · Puffins", 1330, y);
         context.font = "500 14px system-ui,sans-serif";
-        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.5", 1330, y + 20);
+        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.6", 1330, y + 20);
         context.restore();
       }
       function drawPaydayMarker(context, row, x, y) {
@@ -2836,7 +3031,7 @@
             "",
           );
         });
-        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.5");
+        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.6");
         return lines.join("\n");
       }
       async function saveTxtDocument(content, fileName, exportType = "worked") {
@@ -3188,8 +3383,7 @@
           closeClearMenu();
           const settings = document.getElementById("scheduleSettingsMenu");
           if (settings) settings.removeAttribute("open");
-          const importMenu = document.getElementById("scheduleImportMenu");
-          if (importMenu) importMenu.removeAttribute("open");
+          closeImportMenu();
         }
         if (e.target && e.target.id === "schedulePngMenu" && e.target.open) {
           const email = document.getElementById("scheduleEmailMenu");
@@ -3209,34 +3403,23 @@
           const email = document.getElementById("scheduleEmailMenu");
           if (email) email.removeAttribute("open");
         }
-        if (e.target && e.target.id === "scheduleImportMenu" && e.target.open) {
-          closeClearMenu();
-          const exportMenu = document.getElementById("scheduleExportMenu");
-          if (exportMenu) exportMenu.removeAttribute("open");
-          const email = document.getElementById("scheduleEmailMenu");
-          if (email) email.removeAttribute("open");
-          const settings = document.getElementById("scheduleSettingsMenu");
-          if (settings) settings.removeAttribute("open");
-        }
         if (e.target && e.target.id === "scheduleSettingsMenu" && e.target.open) {
           const exportMenu = document.getElementById("scheduleExportMenu");
           if (exportMenu) exportMenu.removeAttribute("open");
           const email = document.getElementById("scheduleEmailMenu");
           if (email) email.removeAttribute("open");
-          const importMenu = document.getElementById("scheduleImportMenu");
-          if (importMenu) importMenu.removeAttribute("open");
+          closeImportMenu();
         }
       });
       document.addEventListener("click", (e) => {
         const menus = [
           document.getElementById("exportMenu"),
           document.getElementById("emailMenu"),
-          document.getElementById("importMenu"),
+          document.getElementById("sidebarImportMenu"),
           document.getElementById("settingsMenu"),
           document.getElementById("scheduleExportMenu"),
           document.getElementById("schedulePngMenu"),
           document.getElementById("scheduleEmailMenu"),
-          document.getElementById("scheduleImportMenu"),
           document.getElementById("scheduleSettingsMenu"),
         ].filter(Boolean);
         menus.forEach((menu) => {
@@ -3377,8 +3560,7 @@
       }
 
       function closeScheduleImportMenu() {
-        const menu = document.getElementById("scheduleImportMenu");
-        if (menu) menu.removeAttribute("open");
+        closeImportMenu();
       }
 
       function scheduleRowsForRange(start, end) {
@@ -3433,7 +3615,7 @@
           `Expected Hours: ${hoursMinutesLabel(row.hours)} | Rate: ${money(row.rate)}/h | Expected Gross Pay: ${money(row.pay)}`,
           "",
         ));
-        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.5");
+        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.6");
         return lines.join("\n");
       }
 
@@ -3716,7 +3898,7 @@
           toast("Please enter a title and description");
           return;
         }
-        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.5`;
+        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.6`;
         window.location.href = `mailto:${REPORT_ISSUE_EMAIL}?subject=${encodeURIComponent(REPORT_ISSUE_SUBJECT)}&body=${encodeURIComponent(body)}`;
         returnFromIssueReport();
       }
