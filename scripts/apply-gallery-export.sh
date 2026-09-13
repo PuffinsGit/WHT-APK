@@ -309,6 +309,38 @@ public class GallerySaverPlugin extends Plugin {
         return folder;
     }
 
+    private Uri getExportsDocumentFolder(boolean create) throws Exception {
+        Uri whtFolder = getWhtDocumentFolder(create);
+        if (whtFolder == null) return null;
+        Uri folder = findTreeChild(whtFolder, "Exports", true);
+        if (folder == null && create) folder = DocumentsContract.createDocument(
+            getContext().getContentResolver(), whtFolder,
+            DocumentsContract.Document.MIME_TYPE_DIR, "Exports");
+        return folder;
+    }
+
+    private Uri saveExportDocument(byte[] bytes, String fileName, String mimeType) throws Exception {
+        ContentResolver resolver = getContext().getContentResolver();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Uri folder = getExportsDocumentFolder(true);
+            if (folder == null) throw new Exception("Select your Documents folder in Settings before exporting.");
+            Uri existing = findTreeChild(folder, fileName, false);
+            Uri file = existing != null ? existing : DocumentsContract.createDocument(resolver, folder, mimeType, fileName);
+            if (file == null) throw new Exception("Android could not create the export file.");
+            try (OutputStream stream = resolver.openOutputStream(file, "wt")) {
+                if (stream == null) throw new Exception("Android could not open the export file.");
+                stream.write(bytes);
+            }
+            return file;
+        }
+        File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "WHT/Exports");
+        if (!folder.exists() && !folder.mkdirs()) throw new Exception("Could not create Documents/WHT/Exports.");
+        File file = new File(folder, fileName);
+        try (FileOutputStream stream = new FileOutputStream(file)) { stream.write(bytes); }
+        MediaScannerConnection.scanFile(getContext(), new String[]{file.getAbsolutePath()}, new String[]{mimeType}, null);
+        return Uri.fromFile(file);
+    }
+
     private String documentName(Uri document) {
         String[] projection = { DocumentsContract.Document.COLUMN_DISPLAY_NAME };
         try (Cursor cursor = getContext().getContentResolver().query(document, projection, null, null, null)) {
@@ -380,32 +412,10 @@ public class GallerySaverPlugin extends Plugin {
         if (!fileName.toLowerCase().endsWith(".txt")) fileName += ".txt";
         try {
             byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
-            Uri savedUri;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                ContentValues values = new ContentValues();
-                values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
-                values.put(MediaStore.Downloads.MIME_TYPE, "text/plain");
-                values.put(MediaStore.Downloads.RELATIVE_PATH, "Download/WHT/");
-                Uri uri = getContext().getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-                if (uri == null) throw new Exception("Android could not create the TXT file.");
-                try (OutputStream stream = getContext().getContentResolver().openOutputStream(uri)) {
-                    if (stream == null) throw new Exception("Android could not open the TXT file.");
-                    stream.write(bytes);
-                }
-                savedUri = uri;
-            } else {
-                File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "WHT");
-                if (!folder.exists() && !folder.mkdirs()) throw new Exception("Could not create Downloads/WHT.");
-                File file = new File(folder, fileName);
-                try (FileOutputStream stream = new FileOutputStream(file)) {
-                    stream.write(bytes);
-                }
-                MediaScannerConnection.scanFile(getContext(), new String[]{file.getAbsolutePath()}, new String[]{"text/plain"}, null);
-                savedUri = Uri.fromFile(file);
-            }
+            Uri savedUri = saveExportDocument(bytes, fileName, "text/plain");
             JSObject result = new JSObject();
             result.put("uri", savedUri.toString());
-            result.put("folder", "Downloads/WHT");
+            result.put("folder", "Documents/WHT/Exports");
             call.resolve(result);
         } catch (Exception error) {
             call.reject("Could not save the TXT file: " + error.getMessage(), error);
@@ -507,7 +517,7 @@ public class GallerySaverPlugin extends Plugin {
         if (getPermissionState("storage") == PermissionState.GRANTED) {
             saveImage(call);
         } else {
-            call.reject("Storage permission is required to save the PNG to the Gallery.");
+            call.reject("Storage permission is required to save the PNG export.");
         }
     }
 
@@ -524,13 +534,13 @@ public class GallerySaverPlugin extends Plugin {
             String base64 = comma >= 0 ? data.substring(comma + 1) : data;
             byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                saveWithMediaStore(call, bytes, fileName);
-            } else {
-                saveLegacy(call, bytes, fileName);
-            }
+            Uri savedUri = saveExportDocument(bytes, fileName, "image/png");
+            JSObject result = new JSObject();
+            result.put("uri", savedUri.toString());
+            result.put("folder", "Documents/WHT/Exports");
+            call.resolve(result);
         } catch (Exception error) {
-            call.reject("Could not save the PNG to the Gallery: " + error.getMessage(), error);
+            call.reject("Could not save the PNG in Documents/WHT/Exports: " + error.getMessage(), error);
         }
     }
 
@@ -594,4 +604,4 @@ if styles.exists():
     styles.write_text(text)
 PY
 
-echo "Added native Android PNG export to Pictures/WHT."
+echo "Added native Android PNG and TXT export to Documents/WHT/Exports."
