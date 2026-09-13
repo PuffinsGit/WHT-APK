@@ -219,6 +219,14 @@
       .home-widget-actions button { min-height:48px; }
       .home-widget-actions .clock-in { background:#198b40; border-color:#28a951; color:#fff; }
       .home-widget-actions .clock-out { background:#cf334b; border-color:#e2455d; color:#fff; }
+      .home-progress-layout { display:grid; grid-template-columns:150px minmax(0,1fr); align-items:center; gap:22px; }
+      .home-progress-ring { width:138px; aspect-ratio:1; border-radius:50%; display:grid; place-items:center; background:conic-gradient(var(--purple2) var(--home-progress), rgba(255,255,255,.12) 0); }
+      .home-progress-ring::before { content:""; grid-area:1/1; width:106px; aspect-ratio:1; border-radius:50%; background:var(--panel); }
+      .home-progress-copy { position:relative; grid-area:1/1; text-align:center; }
+      .home-progress-percent { display:block; font-size:27px; font-weight:950; }
+      .home-progress-complete { display:block; margin-top:2px; color:var(--muted); font-size:9px; font-weight:850; letter-spacing:.09em; }
+      .home-progress-details strong { display:block; margin-bottom:7px; font-size:19px; }
+      .home-progress-details span { color:var(--muted); font-size:12px; }
       .home-shift-list { display:grid; gap:9px; }
       .home-shift-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--panel2); }
       .home-shift-date { font-weight:850; }
@@ -244,6 +252,9 @@
       @media (max-width:520px) {
         .home-widget-stats, .home-widget-actions.three { grid-template-columns:1fr; }
         .home-shift-row { align-items:flex-start; }
+        .home-progress-layout { grid-template-columns:118px minmax(0,1fr); gap:15px; }
+        .home-progress-ring { width:112px; }
+        .home-progress-ring::before { width:84px; }
       }
       .home-screen[hidden] {
         display: none;
@@ -1543,7 +1554,7 @@
       <div id="sidebarTools"></div>
       <div id="scheduleActionsSlot" hidden></div>
       <div class="sidebar-footer">
-        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.3</span></div>
+        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.4</span></div>
         <div class="sidebar-footer-actions">
           <button type="button" class="sidebar-settings-button" id="sidebarSettingsBtn" aria-label="Open settings" title="Settings">⚙</button>
         </div>
@@ -1648,7 +1659,7 @@
       <div class="note" id="workNote">
         Your entries are saved automatically to this device. A backup copy is also kept in Documents/WHT so it can survive an app reinstall.
       </div>
-      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.3</span></footer>
+      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.4</span></footer>
     </div>
 
     <div class="modalback" id="modalBack">
@@ -1736,7 +1747,7 @@
       function normaliseState(target) {
         target.entries = target.entries || {};
         target.scheduleEntries = target.scheduleEntries || {};
-        const allowedHomeWidgets = ["clock", "today", "weekly", "upcoming", "shortcuts"];
+        const allowedHomeWidgets = ["clock", "today", "shift_progress", "weekly", "upcoming", "shortcuts"];
         target.homeWidgets = Array.isArray(target.homeWidgets)
           ? [...new Set(target.homeWidgets.filter((widget) => allowedHomeWidgets.includes(widget)))]
           : [];
@@ -1988,6 +1999,7 @@
       const HOME_WIDGETS = {
         clock: { title: "Clock In / Out", description: "Record today's start or finish time." },
         today: { title: "Today's Shift", description: "See today's scheduled shift at a glance." },
+        shift_progress: { title: "Shift Progress", description: "Follow today's shift completion percentage." },
         weekly: { title: "Weekly Overview", description: "View this week's worked hours and gross pay." },
         upcoming: { title: "Upcoming Shifts", description: "See your next three scheduled shifts." },
         shortcuts: { title: "Quick Access", description: "Open your most-used WHT pages quickly." },
@@ -2000,6 +2012,42 @@
             ? Number(state.sundayRate || 0)
             : Number(state.weekdayRate || 0);
       }
+      function currentShiftProgress() {
+        const now = new Date();
+        const key = iso(now);
+        const scheduled = state.scheduleEntries[key] || {};
+        const worked = state.entries[key] || {};
+        const scheduledStart = parseTime(scheduled.start);
+        let scheduledFinish = parseTime(scheduled.finish);
+        const actualStart = parseTime(worked.start);
+        if (scheduledStart < 0 || scheduledFinish < 0) return { percent:0, label:"No shift scheduled" };
+        if (scheduledFinish <= scheduledStart) scheduledFinish += 1440;
+        const duration = Math.max(1, scheduledFinish - scheduledStart);
+        if (actualStart < 0) return { percent:0, label:`${displayTime(scheduled.start)} – ${displayTime(scheduled.finish)}` };
+        let progressMinutes;
+        const actualFinish = parseTime(worked.finish);
+        if (actualFinish >= 0) {
+          let finish = actualFinish;
+          if (finish <= actualStart) finish += 1440;
+          progressMinutes = Math.max(0, finish - actualStart);
+        } else {
+          const startDate = new Date(now);
+          startDate.setHours(Math.floor(actualStart / 60), actualStart % 60, 0, 0);
+          progressMinutes = Math.max(0, (now - startDate) / 60000);
+        }
+        return { percent:Math.max(0, Math.round(progressMinutes * 100 / duration)), label:`${displayTime(scheduled.start)} – ${displayTime(scheduled.finish)}` };
+      }
+      function refreshHomeShiftProgress() {
+        const ring = document.querySelector("[data-home-progress-ring]");
+        if (!ring) return;
+        const progress = currentShiftProgress();
+        ring.style.setProperty("--home-progress", `${Math.min(100, progress.percent) * 3.6}deg`);
+        const percent = ring.querySelector("[data-home-progress-percent]");
+        const label = document.querySelector("[data-home-progress-label]");
+        if (percent) percent.textContent = `${progress.percent}%`;
+        if (label) label.textContent = progress.label;
+      }
+      setInterval(refreshHomeShiftProgress, 1000);
       function homeWidgetMarkup(type) {
         const remove = `<button type="button" class="home-widget-remove" data-remove-widget="${type}" aria-label="Remove ${HOME_WIDGETS[type].title}" title="Remove widget">×</button>`;
         if (type === "clock") {
@@ -2011,6 +2059,10 @@
           const hasShift = parseTime(entry.start) >= 0 && parseTime(entry.finish) >= 0;
           const hours = hasShift ? paidHoursForEntry(entry) : 0;
           return `<article class="home-widget"><div class="home-widget-head"><div class="home-widget-title">Today's Shift</div>${remove}</div>${hasShift ? `<div class="home-widget-stats"><div class="home-widget-stat"><div class="home-widget-label">Scheduled</div><div class="home-widget-value">${displayTime(entry.start)} – ${displayTime(entry.finish)}</div></div><div class="home-widget-stat"><div class="home-widget-label">Expected</div><div class="home-widget-value">${hoursMinutesLabel(hours)}</div></div></div>` : `<div class="home-widget-empty">No shift is scheduled for today.</div>`}</article>`;
+        }
+        if (type === "shift_progress") {
+          const progress = currentShiftProgress();
+          return `<article class="home-widget"><div class="home-widget-head"><div class="home-widget-title">Shift Progress</div>${remove}</div><div class="home-progress-layout"><div class="home-progress-ring" data-home-progress-ring style="--home-progress:${Math.min(100, progress.percent) * 3.6}deg"><div class="home-progress-copy"><span class="home-progress-percent" data-home-progress-percent>${progress.percent}%</span><span class="home-progress-complete">COMPLETE</span></div></div><div class="home-progress-details"><strong>Today's Shift</strong><span data-home-progress-label>${progress.label}</span></div></div></article>`;
         }
         if (type === "weekly") {
           const weekStart = monday(new Date());
@@ -2059,6 +2111,7 @@
           else if (button.dataset.homePage === "calendar") document.getElementById("calendarBtn").click();
           else showWorkScreen();
         });
+        refreshHomeShiftProgress();
       }
       function openHomeWidgetPicker() {
         const available = Object.entries(HOME_WIDGETS).filter(([type]) => !state.homeWidgets.includes(type));
@@ -2558,7 +2611,7 @@
         context.textAlign = "right";
         context.fillText("© 2026 Mark Breddy · Puffins", 1330, y);
         context.font = "500 14px system-ui,sans-serif";
-        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.3", 1330, y + 20);
+        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.4", 1330, y + 20);
         context.restore();
       }
       function drawPaydayMarker(context, row, x, y) {
@@ -2772,7 +2825,7 @@
             "",
           );
         });
-        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.3");
+        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.4");
         return lines.join("\n");
       }
       async function saveTxtDocument(content, fileName, exportType = "worked") {
@@ -3183,7 +3236,7 @@
 
       // Defensive fallback for older saved states.
       state.scheduleEntries = state.scheduleEntries || {};
-      let activeScreen = "work";
+      let activeScreen = "home";
       let reportReturnScreen = "work";
 
       function scheduleEntry(i) {
@@ -3369,7 +3422,7 @@
           `Expected Hours: ${hoursMinutesLabel(row.hours)} | Rate: ${money(row.rate)}/h | Expected Gross Pay: ${money(row.pay)}`,
           "",
         ));
-        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.3");
+        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.4");
         return lines.join("\n");
       }
 
@@ -3652,7 +3705,7 @@
           toast("Please enter a title and description");
           return;
         }
-        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.3`;
+        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.4`;
         window.location.href = `mailto:${REPORT_ISSUE_EMAIL}?subject=${encodeURIComponent(REPORT_ISSUE_SUBJECT)}&body=${encodeURIComponent(body)}`;
         returnFromIssueReport();
       }
@@ -4261,7 +4314,7 @@
       document.getElementById("galleryInput").onchange =
         document.getElementById("photoInput").onchange;
 
-      // Populate the current week immediately when the app first opens.
+      // Open the personalised Home dashboard when the app first launches.
       refreshScreen();
       restoreDeviceSave().finally(() => setTimeout(requestBackupFolderIfNeeded, 500));
     </script>
