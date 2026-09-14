@@ -1561,7 +1561,7 @@
       <div id="sidebarTools"></div>
       <div id="scheduleActionsSlot" hidden></div>
       <div class="sidebar-footer">
-        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.8</span></div>
+        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.9</span></div>
         <div class="sidebar-footer-actions">
           <button type="button" class="sidebar-settings-button" id="sidebarSettingsBtn" aria-label="Open settings" title="Settings">⚙</button>
         </div>
@@ -1660,8 +1660,7 @@
         <details class="export-menu" id="importMenu">
           <summary>Import</summary>
           <div class="export-options">
-            <button type="button" id="importWorkedTxt">Worked Hours .TXT</button>
-            <button type="button" id="importScheduleTxt">Schedule .TXT</button>
+            <button type="button" id="importTxt">.TXT</button>
           </div>
         </details>
       </div>
@@ -1673,7 +1672,7 @@
       <div class="note" id="workNote">
         Your entries are saved automatically to this device. A backup copy is also kept in Documents/WHT so it can survive an app reinstall.
       </div>
-      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.8</span></footer>
+      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.9</span></footer>
     </div>
 
     <div class="modalback" id="modalBack">
@@ -2634,7 +2633,7 @@
         context.textAlign = "right";
         context.fillText("© 2026 Mark Breddy · Puffins", 1330, y);
         context.font = "500 14px system-ui,sans-serif";
-        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.8", 1330, y + 20);
+        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.9", 1330, y + 20);
         context.restore();
       }
       function drawPaydayMarker(context, row, x, y) {
@@ -2848,7 +2847,7 @@
             "",
           );
         });
-        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.8");
+        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.9");
         return lines.join("\n");
       }
       async function saveTxtDocument(content, fileName, exportType = "worked") {
@@ -3190,8 +3189,7 @@
       document.getElementById("importMenu").addEventListener("toggle", (e) => {
         if (e.target.open) closeExportMenu();
       });
-      document.getElementById("importWorkedTxt").onclick = () => launchTxtImport("work");
-      document.getElementById("importScheduleTxt").onclick = () => launchTxtImport("schedule");
+      document.getElementById("importTxt").onclick = () => launchTxtImport("work");
       document.getElementById("pngMenu").addEventListener("toggle", (e) => {
         if (e.target.open) { closeEmailMenu(); closeTxtMenu(); }
       });
@@ -3343,8 +3341,7 @@
             <details class="export-menu" id="scheduleImportMenu">
               <summary>Import</summary>
               <div class="export-options">
-                <button type="button" id="scheduleImportWorkedTxt">Worked Hours .TXT</button>
-                <button type="button" id="scheduleImportScheduleTxt">Schedule .TXT</button>
+                <button type="button" id="scheduleImportTxt">.TXT</button>
               </div>
             </details>
           </div>`;
@@ -3458,7 +3455,7 @@
           `Expected Hours: ${hoursMinutesLabel(row.hours)} | Rate: ${money(row.rate)}/h | Expected Gross Pay: ${money(row.pay)}`,
           "",
         ));
-        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.8");
+        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.9");
         return lines.join("\n");
       }
 
@@ -3646,8 +3643,7 @@
           closeScheduleExportMenu();
           showModal(`<h2>Export Specific Date Range</h2><p>Select the first and last scheduled-shift dates to export.</p><div class="modalrow"><label>Start Date<input id="scheduleTxtStartDate" type="date" value="${iso(new Date())}"></label><label>End Date<input id="scheduleTxtEndDate" type="date" value="${iso(new Date())}"></label></div><div class="modalactions"><button onclick="closeModal()">Cancel</button><button class="primary" onclick="exportSelectedScheduleTxtDate()">Export TXT</button></div>`);
         };
-        document.getElementById("scheduleImportWorkedTxt").onclick = () => launchTxtImport("work");
-        document.getElementById("scheduleImportScheduleTxt").onclick = () => launchTxtImport("schedule");
+        document.getElementById("scheduleImportTxt").onclick = () => launchTxtImport("schedule");
       }
 
       window.exportSelectedScheduleTxtDate = () => {
@@ -3743,7 +3739,7 @@
           toast("Please enter a title and description");
           return;
         }
-        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.8`;
+        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.9`;
         window.location.href = `mailto:${REPORT_ISSUE_EMAIL}?subject=${encodeURIComponent(REPORT_ISSUE_SUBJECT)}&body=${encodeURIComponent(body)}`;
         returnFromIssueReport();
       }
