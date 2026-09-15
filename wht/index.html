@@ -514,6 +514,8 @@
         align-items: center;
         gap: 16px;
       }
+      .weekly-hours-cell { cursor:pointer; user-select:none; -webkit-user-select:none; touch-action:none; border-radius:9px; }
+      .weekly-hours-cell:focus-visible { outline:2px solid var(--purple2); outline-offset:5px; }
       .schedule-summary-divider,
       .bottom-clear-divider {
         align-self: stretch;
@@ -1561,7 +1563,7 @@
       <div id="sidebarTools"></div>
       <div id="scheduleActionsSlot" hidden></div>
       <div class="sidebar-footer">
-        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.9</span></div>
+        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.10</span></div>
         <div class="sidebar-footer-actions">
           <button type="button" class="sidebar-settings-button" id="sidebarSettingsBtn" aria-label="Open settings" title="Settings">⚙</button>
         </div>
@@ -1618,7 +1620,7 @@
       <section class="schedule-screen" id="scheduleScreen"></section>
       <section class="summary" id="workSummary">
         <div class="summarycard schedule-summary-card">
-          <div>
+          <div class="weekly-hours-cell" id="weeklyHoursCell" role="button" tabindex="0" aria-label="Hold to show weekly hours in decimal format">
             <div class="summarylabel">Weekly Hours</div>
             <div class="summaryvalue" id="weeklyHours">0 H 0 M</div>
           </div>
@@ -1672,7 +1674,7 @@
       <div class="note" id="workNote">
         Your entries are saved automatically to this device. A backup copy is also kept in Documents/WHT so it can survive an app reinstall.
       </div>
-      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.9</span></footer>
+      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.10</span></footer>
     </div>
 
     <div class="modalback" id="modalBack">
@@ -2174,15 +2176,14 @@
         return `${wholeHours}H ${minutes}M`;
       }
       function wireHoursHold(target, display, hours) {
-        const duration = hoursMinutesLabel(hours);
-        const decimal = `${Math.max(0, Number(hours) || 0).toFixed(2)} h`;
+        const readHours = () => typeof hours === "function" ? hours() : hours;
         const showDecimal = (event) => {
           if (event.pointerId != null && target.setPointerCapture) {
             try { target.setPointerCapture(event.pointerId); } catch (_) {}
           }
-          display.textContent = decimal;
+          display.textContent = `${Math.max(0, Number(readHours()) || 0).toFixed(2)} h`;
         };
-        const showDuration = () => { display.textContent = duration; };
+        const showDuration = () => { display.textContent = hoursMinutesLabel(readHours()); };
         target.addEventListener("pointerdown", showDecimal);
         target.addEventListener("pointerup", showDuration);
         target.addEventListener("pointercancel", showDuration);
@@ -2193,6 +2194,11 @@
         target.addEventListener("keyup", showDuration);
         target.addEventListener("blur", showDuration);
       }
+      wireHoursHold(
+        document.getElementById("weeklyHoursCell"),
+        document.getElementById("weeklyHours"),
+        () => Number(document.getElementById("weeklyHoursCell").dataset.hours || 0),
+      );
       function render() {
         refreshClockedInIndicator();
         if (activeScreen === "schedule") {
@@ -2244,6 +2250,7 @@
           box.appendChild(card);
         });
         document.getElementById("weeklyHours").textContent = hoursMinutesLabel(sum);
+        document.getElementById("weeklyHoursCell").dataset.hours = String(sum);
         document.getElementById("estimatedPay").textContent = money(pay);
       }
       function toInput(s) {
@@ -2633,7 +2640,7 @@
         context.textAlign = "right";
         context.fillText("© 2026 Mark Breddy · Puffins", 1330, y);
         context.font = "500 14px system-ui,sans-serif";
-        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.9", 1330, y + 20);
+        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.10", 1330, y + 20);
         context.restore();
       }
       function drawPaydayMarker(context, row, x, y) {
@@ -2847,7 +2854,7 @@
             "",
           );
         });
-        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.9");
+        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.10");
         return lines.join("\n");
       }
       async function saveTxtDocument(content, fileName, exportType = "worked") {
@@ -3455,7 +3462,7 @@
           `Expected Hours: ${hoursMinutesLabel(row.hours)} | Rate: ${money(row.rate)}/h | Expected Gross Pay: ${money(row.pay)}`,
           "",
         ));
-        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.9");
+        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.10");
         return lines.join("\n");
       }
 
@@ -3739,7 +3746,7 @@
           toast("Please enter a title and description");
           return;
         }
-        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.9`;
+        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.10`;
         window.location.href = `mailto:${REPORT_ISSUE_EMAIL}?subject=${encodeURIComponent(REPORT_ISSUE_SUBJECT)}&body=${encodeURIComponent(body)}`;
         returnFromIssueReport();
       }
