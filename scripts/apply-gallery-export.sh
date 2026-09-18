@@ -75,6 +75,7 @@ public class MainActivity extends BridgeActivity {
     private void refreshWidgets() {
         WhtLauncherIcon.sync(this, WhtWidgetStyle.state(this));
         ClockWidgetProvider.refreshAll(this);
+        QuickDialWidgetProvider.refreshAll(this);
         NextShiftWidgetProvider.refreshAll(this);
         ShiftProgressWidgetProvider.refreshAll(this);
     }
@@ -88,6 +89,8 @@ public class MainActivity extends BridgeActivity {
             javascript = "if(typeof showScheduleScreen==='function'){if(typeof closeSidebar==='function')closeSidebar();showScheduleScreen();}";
         } else if ("worked_today".equals(destination)) {
             javascript = "if(typeof showWorkScreen==='function'){if(typeof closeSidebar==='function')closeSidebar();viewMonday=monday(new Date());showWorkScreen();if(typeof focusTodayCard==='function')focusTodayCard();}";
+        } else if ("home".equals(destination)) {
+            javascript = "if(typeof showHomeScreen==='function'){if(typeof closeSidebar==='function')closeSidebar();showHomeScreen();}";
         } else return;
         getBridge().getWebView().postDelayed(() -> getBridge().getWebView().evaluateJavascript(javascript, null), 900);
     }
@@ -228,6 +231,7 @@ public class GallerySaverPlugin extends Plugin {
             org.json.JSONObject savedState = new org.json.JSONObject(data);
             WhtLauncherIcon.sync(getContext(), savedState);
             ClockWidgetProvider.refreshAll(getContext());
+            QuickDialWidgetProvider.refreshAll(getContext());
             NextShiftWidgetProvider.refreshAll(getContext());
             ShiftProgressWidgetProvider.refreshAll(getContext());
             WhtClockNotification.sync(getContext(), savedState);
@@ -256,6 +260,7 @@ public class GallerySaverPlugin extends Plugin {
             }
             org.json.JSONObject savedState = new org.json.JSONObject(data == null || data.isEmpty() ? "{}" : data);
             WhtLauncherIcon.sync(getContext(), savedState);
+            QuickDialWidgetProvider.refreshAll(getContext());
             WhtClockNotification.sync(getContext(), savedState);
             result.put("data", data == null ? "" : data);
             call.resolve(result);

@@ -237,12 +237,19 @@
       .home-widget-actions.clock-grid button { height:100%; min-height:0; margin:0; }
       .home-widget-actions .clock-in { background:#198b40; border-color:#28a951; color:#fff; }
       .home-widget-actions .clock-out { background:#cf334b; border-color:#e2455d; color:#fff; }
-      .home-phone-setup { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; }
+      .home-phone-setup { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr) auto; gap:10px; }
       .home-phone-setup input { width:100%; min-width:0; box-sizing:border-box; padding:13px 14px; color:var(--text); background:var(--panel2); border:1px solid var(--line); border-radius:11px; outline:none; }
       .home-phone-setup input:focus { border-color:var(--purple); box-shadow:0 0 0 3px rgba(118,81,255,.14); }
       .home-phone-setup button { min-width:116px; padding:0 18px; font-weight:850; }
       .home-phone-call { min-height:52px; display:grid; place-items:center; padding:0 18px; border:1px solid var(--purple); border-radius:12px; background:var(--purple); color:#fff; font-weight:900; text-align:center; text-decoration:none; box-shadow:0 8px 22px rgba(118,81,255,.2); }
       .home-phone-call:hover { filter:brightness(1.08); }
+      .home-phone-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+      .home-phone-call strong, .home-phone-call span { display:block; }
+      .home-phone-call span { margin-top:3px; font-size:11px; font-weight:650; opacity:.82; }
+      .quick-dial-editor { display:grid; gap:10px; margin-top:14px; }
+      .quick-dial-editor-row { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr) auto; gap:8px; align-items:center; }
+      .quick-dial-editor-row input { min-width:0; }
+      .quick-dial-editor-row .remove { min-height:42px; padding:0 13px; color:#ff7086; }
       .home-progress-layout { display:grid; grid-template-columns:150px minmax(0,1fr); align-items:center; gap:22px; }
       .home-progress-ring { width:138px; aspect-ratio:1; border-radius:50%; display:grid; place-items:center; background:conic-gradient(var(--purple2) var(--home-progress), rgba(255,255,255,.12) 0); }
       .home-progress-ring::before { content:""; grid-area:1/1; width:106px; aspect-ratio:1; border-radius:50%; background:var(--panel); }
@@ -275,7 +282,8 @@
       .home-widget-picker span { color:var(--muted); font-size:11px; }
       @media (max-width:520px) {
         .home-widget-stats, .home-widget-actions.three { grid-template-columns:1fr; }
-        .home-phone-setup { grid-template-columns:1fr; }
+        .home-phone-setup, .quick-dial-editor-row { grid-template-columns:1fr; }
+        .home-phone-list { grid-template-columns:1fr; }
         .home-phone-setup button { min-height:46px; }
         .home-shift-row { align-items:flex-start; }
         .home-progress-layout { grid-template-columns:118px minmax(0,1fr); gap:15px; }
@@ -1600,7 +1608,7 @@
       <div id="sidebarTools"></div>
       <div id="scheduleActionsSlot" hidden></div>
       <div class="sidebar-footer">
-        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.16</span></div>
+        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.17</span></div>
         <div class="sidebar-footer-actions">
           <button type="button" class="sidebar-settings-button" id="sidebarSettingsBtn" aria-label="Open settings" title="Settings">⚙</button>
         </div>
@@ -1711,7 +1719,7 @@
       <div class="note" id="workNote">
         Your entries are saved automatically to this device. A backup copy is also kept in Documents/WHT so it can survive an app reinstall.
       </div>
-      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.16</span></footer>
+      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.17</span></footer>
     </div>
 
     <div class="modalback" id="modalBack">
@@ -1810,7 +1818,17 @@
         target.break30Threshold = Math.min(12, Math.max(0.5, Number(target.break30Threshold) || 6));
         target.break10Unpaid = target.break10Unpaid === true;
         target.break30Unpaid = target.break30Unpaid === true;
-        target.quickDialNumber = typeof target.quickDialNumber === "string" ? target.quickDialNumber.trim() : "";
+        const legacyQuickDial = typeof target.quickDialNumber === "string" ? target.quickDialNumber.trim() : "";
+        target.quickDialEntries = Array.isArray(target.quickDialEntries)
+          ? target.quickDialEntries
+              .map((entry, index) => ({
+                id: String(entry && entry.id || `quick-${index + 1}`),
+                label: String(entry && entry.label || `Contact ${index + 1}`).trim(),
+                number: String(entry && entry.number || "").trim(),
+              }))
+              .filter((entry) => entry.number)
+          : (legacyQuickDial ? [{ id: "quick-legacy", label: "Quick Dial", number: legacyQuickDial }] : []);
+        target.quickDialNumber = legacyQuickDial;
         target.payday = Number.isInteger(Number(target.payday)) && Number(target.payday) >= 0 && Number(target.payday) <= 6 ? Number(target.payday) : 5;
         target.use24Hour = target.use24Hour !== false;
         target.themeMode = target.themeMode === "light" ? "light" : "dark";
@@ -2131,12 +2149,12 @@
         return plus + raw.replace(/\D/g, "");
       }
       function homeWidgetMarkup(type, index) {
-        const changeNumber = type === "phone" && state.quickDialNumber
-          ? `<button type="button" data-change-phone>Change Number</button>`
+        const quickDialOptions = type === "phone"
+          ? `<button type="button" data-add-phone>Add Number</button>${state.quickDialEntries.length ? `<button type="button" data-manage-phone>Manage Numbers</button>` : ""}`
           : "";
-        const controls = `<details class="home-widget-menu"><summary aria-label="Open ${HOME_WIDGETS[type].title} options" title="Widget options">⋮</summary><div class="home-widget-menu-options"><button type="button" data-move-widget="${type}" data-direction="up" ${index === 0 ? "disabled" : ""}>Move Up</button><button type="button" data-move-widget="${type}" data-direction="down" ${index === state.homeWidgets.length - 1 ? "disabled" : ""}>Move Down</button>${changeNumber}<button type="button" class="remove" data-remove-widget="${type}">Remove</button></div></details>`;
+        const controls = `<details class="home-widget-menu"><summary aria-label="Open ${HOME_WIDGETS[type].title} options" title="Widget options">⋮</summary><div class="home-widget-menu-options"><button type="button" data-move-widget="${type}" data-direction="up" ${index === 0 ? "disabled" : ""}>Move Up</button><button type="button" data-move-widget="${type}" data-direction="down" ${index === state.homeWidgets.length - 1 ? "disabled" : ""}>Move Down</button>${quickDialOptions}<button type="button" class="remove" data-remove-widget="${type}">Remove</button></div></details>`;
         if (type === "clock") {
-          return `<article class="home-widget"><div class="home-widget-head"><div class="home-widget-title">Clock In / Out</div>${controls}</div><div class="home-widget-actions clock-grid"><button type="button" class="clock-in" data-home-clock="start">Clock In</button><button type="button" class="clock-out" data-home-clock="finish">Clock Out</button><button type="button" data-home-break="in">Break In</button><button type="button" data-home-break="out">Break Out</button></div></article>`;
+          return `<article class="home-widget"><div class="home-widget-head"><div class="home-widget-title">Clock In / Out</div>${controls}</div><div class="home-widget-actions clock-grid"><button type="button" class="clock-in" data-home-clock="start">Clock In</button><button type="button" class="clock-out" data-home-clock="finish">Clock Out</button><button type="button" data-home-break="in">Start Break</button><button type="button" data-home-break="out">End Break</button></div></article>`;
         }
         if (type === "today") {
           const today = new Date();
@@ -2175,11 +2193,10 @@
           return `<article class="home-widget"><div class="home-widget-head"><div class="home-widget-title">Upcoming Shifts</div>${controls}</div>${rows ? `<div class="home-shift-list">${rows}</div>` : `<div class="home-widget-empty">No upcoming shifts are saved.</div>`}</article>`;
         }
         if (type === "phone") {
-          const savedNumber = state.quickDialNumber;
-          const dialNumber = dialablePhoneNumber(savedNumber);
-          const content = savedNumber && dialNumber
-            ? `<a class="home-phone-call" href="tel:${escapeHTML(dialNumber)}" aria-label="Call ${escapeHTML(savedNumber)}">Call ${escapeHTML(savedNumber)}</a>`
-            : `<form class="home-phone-setup" data-home-phone-form><input name="phoneNumber" type="tel" inputmode="tel" autocomplete="tel" placeholder="Enter phone number" aria-label="Phone number" required><button type="submit">Save Number</button></form>`;
+          const entries = state.quickDialEntries || [];
+          const content = entries.length
+            ? `<div class="home-phone-list">${entries.map((entry) => `<a class="home-phone-call" href="tel:${escapeHTML(dialablePhoneNumber(entry.number))}" aria-label="Call ${escapeHTML(entry.label)} at ${escapeHTML(entry.number)}"><span><strong>${escapeHTML(entry.label)}</strong><span>${escapeHTML(entry.number)}</span></span></a>`).join("")}</div>`
+            : `<form class="home-phone-setup" data-home-phone-form><input name="phoneLabel" type="text" autocomplete="off" placeholder="Name" aria-label="Quick Dial name" required><input name="phoneNumber" type="tel" inputmode="tel" autocomplete="tel" placeholder="Phone number" aria-label="Phone number" required><button type="submit">Save Number</button></form>`;
           return `<article class="home-widget"><div class="home-widget-head"><div class="home-widget-title">Quick Dial</div>${controls}</div>${content}</article>`;
         }
         return `<article class="home-widget"><div class="home-widget-head"><div class="home-widget-title">Quick Access</div>${controls}</div><div class="home-widget-actions three"><button type="button" data-home-page="work">Worked Hours</button><button type="button" data-home-page="schedule">Schedule</button><button type="button" data-home-page="calendar">Calendar</button></div></article>`;
@@ -2210,27 +2227,59 @@
         list.querySelectorAll("[data-home-break]").forEach((button) => button.onclick = () => breakCurrentTime(button.dataset.homeBreak));
         list.querySelectorAll("[data-home-phone-form]").forEach((form) => form.onsubmit = (event) => {
           event.preventDefault();
+          const label = String(new FormData(form).get("phoneLabel") || "").trim();
           const value = String(new FormData(form).get("phoneNumber") || "").trim();
           if (dialablePhoneNumber(value).replace("+", "").length < 3) {
             toast("Enter a valid phone number");
             return;
           }
-          state.quickDialNumber = value;
+          state.quickDialEntries.push({ id: `quick-${Date.now()}`, label: label || "Quick Dial", number: value });
+          state.quickDialNumber = state.quickDialEntries[0].number;
           save();
           renderHomeDashboard();
         });
-        list.querySelectorAll("[data-change-phone]").forEach((button) => button.onclick = () => {
-          state.quickDialNumber = "";
-          save();
-          renderHomeDashboard();
-          requestAnimationFrame(() => document.querySelector("[data-home-phone-form] input")?.focus());
-        });
+        list.querySelectorAll("[data-add-phone]").forEach((button) => button.onclick = () => openQuickDialManager(true));
+        list.querySelectorAll("[data-manage-phone]").forEach((button) => button.onclick = () => openQuickDialManager(false));
         list.querySelectorAll("[data-home-page]").forEach((button) => button.onclick = () => {
           if (button.dataset.homePage === "schedule") showScheduleScreen();
           else if (button.dataset.homePage === "calendar") document.getElementById("calendarBtn").click();
           else showWorkScreen();
         });
         refreshHomeShiftProgress();
+      }
+      function quickDialEditorRow(entry = {}) {
+        return `<div class="quick-dial-editor-row" data-quick-dial-row data-id="${escapeHTML(entry.id || "")}"><input data-quick-label type="text" value="${escapeHTML(entry.label || "")}" placeholder="Name" aria-label="Quick Dial name" required><input data-quick-number type="tel" inputmode="tel" value="${escapeHTML(entry.number || "")}" placeholder="Phone number" aria-label="Phone number" required><button type="button" class="remove" data-remove-quick-number>Remove</button></div>`;
+      }
+      function openQuickDialManager(addBlank = false) {
+        const entries = (state.quickDialEntries || []).map((entry) => ({ ...entry }));
+        if (addBlank || !entries.length) entries.push({ id: "", label: "", number: "" });
+        showModal(`<h2>${addBlank ? "Add Quick Dial Number" : "Manage Quick Dial Numbers"}</h2><p>Add a recognisable name to each number. These names are shown on both the WHT Home page and Android Quick Dial widget.</p><form id="quickDialEditorForm"><div class="quick-dial-editor" id="quickDialEditor">${entries.map(quickDialEditorRow).join("")}</div><div class="modalactions"><button type="button" id="addQuickDialRow">Add Another</button><button type="button" onclick="closeModal()">Cancel</button><button type="submit" class="primary">Save</button></div></form>`);
+        const editor = document.getElementById("quickDialEditor");
+        document.getElementById("addQuickDialRow").onclick = () => {
+          editor.insertAdjacentHTML("beforeend", quickDialEditorRow());
+          editor.lastElementChild.querySelector("[data-quick-label]").focus();
+        };
+        editor.onclick = (event) => {
+          const remove = event.target.closest("[data-remove-quick-number]");
+          if (remove) remove.closest("[data-quick-dial-row]").remove();
+        };
+        document.getElementById("quickDialEditorForm").onsubmit = (event) => {
+          event.preventDefault();
+          const updated = [...editor.querySelectorAll("[data-quick-dial-row]")].map((row, index) => ({
+            id: row.dataset.id || `quick-${Date.now()}-${index}`,
+            label: row.querySelector("[data-quick-label]").value.trim() || `Contact ${index + 1}`,
+            number: row.querySelector("[data-quick-number]").value.trim(),
+          })).filter((entry) => entry.number);
+          if (updated.some((entry) => dialablePhoneNumber(entry.number).replace("+", "").length < 3)) {
+            toast("Enter a valid phone number for every Quick Dial option");
+            return;
+          }
+          state.quickDialEntries = updated;
+          state.quickDialNumber = updated[0]?.number || "";
+          save();
+          closeModal();
+          renderHomeDashboard();
+        };
       }
       function openHomeWidgetPicker() {
         const available = Object.entries(HOME_WIDGETS).filter(([type]) => !state.homeWidgets.includes(type));
@@ -2788,7 +2837,7 @@
         context.textAlign = "right";
         context.fillText("© 2026 Mark Breddy · Puffins", 1330, y);
         context.font = "500 14px system-ui,sans-serif";
-        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.16", 1330, y + 20);
+        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.17", 1330, y + 20);
         context.restore();
       }
       function drawPaydayMarker(context, row, x, y) {
@@ -3002,7 +3051,7 @@
             "",
           );
         });
-        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.16");
+        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.17");
         return lines.join("\n");
       }
       async function saveTxtDocument(content, fileName, exportType = "worked") {
@@ -3615,7 +3664,7 @@
           `Expected Hours: ${hoursMinutesLabel(row.hours)} | Rate: ${money(row.rate)}/h | Expected Gross Pay: ${money(row.pay)}`,
           "",
         ));
-        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.16");
+        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.17");
         return lines.join("\n");
       }
 
@@ -3899,7 +3948,7 @@
           toast("Please enter a title and description");
           return;
         }
-        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.16`;
+        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.17`;
         window.location.href = `mailto:${REPORT_ISSUE_EMAIL}?subject=${encodeURIComponent(REPORT_ISSUE_SUBJECT)}&body=${encodeURIComponent(body)}`;
         returnFromIssueReport();
       }

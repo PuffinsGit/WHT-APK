@@ -65,11 +65,26 @@ cat > "$RES_DIR/layout/wht_clock_widget.xml" <<'XML'
       <TextView android:id="@+id/widget_clock_out" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:background="@drawable/wht_widget_clock_out" android:text="Clock Out" android:textColor="@color/wht_widget_text" android:textSize="15sp" android:textStyle="bold" />
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:paddingTop="4dp">
-      <TextView android:id="@+id/widget_break_in" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:background="@drawable/wht_widget_break_in" android:text="Break In" android:textColor="@color/wht_widget_text" android:textSize="15sp" android:textStyle="bold" />
-      <TextView android:id="@+id/widget_break_out" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:background="@drawable/wht_widget_break_out" android:text="Break Out" android:textColor="@color/wht_widget_text" android:textSize="15sp" android:textStyle="bold" />
+      <TextView android:id="@+id/widget_break_in" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:background="@drawable/wht_widget_break_in" android:text="Start Break" android:textColor="@color/wht_widget_text" android:textSize="15sp" android:textStyle="bold" />
+      <TextView android:id="@+id/widget_break_out" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:gravity="center" android:background="@drawable/wht_widget_break_out" android:text="End Break" android:textColor="@color/wht_widget_text" android:textSize="15sp" android:textStyle="bold" />
     </LinearLayout>
   </LinearLayout>
   <TextView android:id="@+id/widget_confirmation" android:layout_width="wrap_content" android:layout_height="36dp" android:layout_gravity="center" android:background="@drawable/wht_widget_confirmation" android:elevation="10dp" android:gravity="center" android:minWidth="118dp" android:paddingLeft="18dp" android:paddingRight="18dp" android:textColor="@color/wht_widget_text" android:textSize="14sp" android:textStyle="bold" android:visibility="gone" />
+</FrameLayout>
+XML
+
+cat > "$RES_DIR/layout/wht_quick_dial_widget.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/quick_dial_root" android:layout_width="match_parent" android:layout_height="match_parent">
+  <ImageView android:id="@+id/quick_dial_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />
+  <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:paddingLeft="10dp" android:paddingTop="6dp" android:paddingRight="10dp" android:paddingBottom="6dp">
+    <TextView android:id="@+id/quick_dial_title" android:layout_width="match_parent" android:layout_height="24dp" android:gravity="center" android:paddingLeft="34dp" android:paddingRight="34dp" android:text="Quick Dial" android:textColor="@color/wht_widget_text" android:textSize="15sp" android:textStyle="bold" />
+    <TextView android:id="@+id/quick_dial_one" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="3dp" android:gravity="center" android:background="@drawable/wht_widget_quick_dial_button" android:maxLines="1" android:text="Contact 1" android:textColor="@color/wht_widget_text" android:textSize="13sp" android:textStyle="bold" />
+    <TextView android:id="@+id/quick_dial_two" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="5dp" android:gravity="center" android:background="@drawable/wht_widget_quick_dial_button" android:maxLines="1" android:text="Contact 2" android:textColor="@color/wht_widget_text" android:textSize="13sp" android:textStyle="bold" />
+    <TextView android:id="@+id/quick_dial_three" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="5dp" android:gravity="center" android:background="@drawable/wht_widget_quick_dial_button" android:maxLines="1" android:text="Contact 3" android:textColor="@color/wht_widget_text" android:textSize="13sp" android:textStyle="bold" />
+    <TextView android:id="@+id/quick_dial_four" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="5dp" android:gravity="center" android:background="@drawable/wht_widget_quick_dial_button" android:maxLines="1" android:text="Contact 4" android:textColor="@color/wht_widget_text" android:textSize="13sp" android:textStyle="bold" android:visibility="gone" />
+  </LinearLayout>
+  <ImageView android:layout_width="26dp" android:layout_height="26dp" android:layout_gravity="top|right" android:layout_marginTop="5dp" android:layout_marginRight="7dp" android:src="@drawable/wht_widget_logo" android:contentDescription="WHT" />
 </FrameLayout>
 XML
 
@@ -147,11 +162,17 @@ XML
 cat > "$RES_DIR/drawable/wht_widget_break_out.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#DDB46A2A"/><corners android:radius="16dp"/><stroke android:width="1dp" android:color="#44FFFFFF"/></shape>
 XML
+cat > "$RES_DIR/drawable/wht_widget_quick_dial_button.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#261A2030"/><corners android:radius="12dp"/><stroke android:width="1dp" android:color="#44FFFFFF"/></shape>
+XML
 cat > "$RES_DIR/drawable/wht_widget_confirmation.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#D9181D27"/><corners android:radius="18dp"/><stroke android:width="1dp" android:color="#66FFFFFF"/></shape>
 XML
 cat > "$RES_DIR/xml/wht_clock_widget_info.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?><appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:initialLayout="@layout/wht_clock_widget" android:previewLayout="@layout/wht_clock_widget" android:minWidth="320dp" android:minHeight="110dp" android:minResizeWidth="40dp" android:minResizeHeight="40dp" android:resizeMode="horizontal|vertical" android:targetCellWidth="5" android:targetCellHeight="2" android:updatePeriodMillis="1800000" android:widgetCategory="home_screen" />
+XML
+cat > "$RES_DIR/xml/wht_quick_dial_widget_info.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:initialLayout="@layout/wht_quick_dial_widget" android:previewLayout="@layout/wht_quick_dial_widget" android:minWidth="180dp" android:minHeight="110dp" android:minResizeWidth="40dp" android:minResizeHeight="40dp" android:resizeMode="horizontal|vertical" android:targetCellWidth="3" android:targetCellHeight="2" android:updatePeriodMillis="1800000" android:widgetCategory="home_screen" />
 XML
 cat > "$RES_DIR/xml/wht_next_shift_widget_info.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?><appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:initialLayout="@layout/wht_next_shift_widget" android:previewLayout="@layout/wht_next_shift_widget" android:minWidth="180dp" android:minHeight="40dp" android:minResizeWidth="40dp" android:minResizeHeight="40dp" android:resizeMode="horizontal|vertical" android:targetCellWidth="3" android:targetCellHeight="1" android:updatePeriodMillis="1800000" android:widgetCategory="home_screen" />
@@ -200,6 +221,7 @@ final class WhtClockNotification {
    boolean active=e!=null&&!start.isEmpty()&&e.optString("finish","").isEmpty();
    NotificationManager m=(NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
    ClockWidgetProvider.refreshAll(c);
+   QuickDialWidgetProvider.refreshAll(c);
    NextShiftWidgetProvider.refreshAll(c);
    ShiftProgressWidgetProvider.refreshAll(c);
    if(!active){m.cancel(ID);scheduleTick(c,false);scheduleLiveTick(c,false);return;}
@@ -362,6 +384,23 @@ public class ClockWidgetProvider extends AppWidgetProvider {
 }
 JAVA
 
+cat > "$JAVA_DIR/QuickDialWidgetProvider.java" <<'JAVA'
+package com.workedhourstracker.app;
+import android.app.*; import android.appwidget.*; import android.content.*; import android.net.Uri; import android.os.Bundle; import android.view.View; import android.widget.RemoteViews; import org.json.*; import java.util.*;
+public class QuickDialWidgetProvider extends AppWidgetProvider {
+ public void onUpdate(Context c,AppWidgetManager m,int[] ids){JSONObject s=WhtWidgetStyle.state(c);for(int id:ids)m.updateAppWidget(id,view(c,s,isTall(m,id)));}
+ public void onAppWidgetOptionsChanged(Context c,AppWidgetManager m,int id,Bundle o){m.updateAppWidget(id,view(c,WhtWidgetStyle.state(c),o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)>=180));}
+ static boolean isTall(AppWidgetManager m,int id){return m.getAppWidgetOptions(id).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)>=180;}
+ public static void refreshAll(Context c){AppWidgetManager m=AppWidgetManager.getInstance(c);JSONObject s=WhtWidgetStyle.state(c);for(int id:m.getAppWidgetIds(new ComponentName(c,QuickDialWidgetProvider.class)))m.updateAppWidget(id,view(c,s,isTall(m,id)));}
+ static RemoteViews view(Context c,JSONObject s,boolean tall){RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.wht_quick_dial_widget);v.setImageViewBitmap(R.id.quick_dial_background,WhtWidgetStyle.background(s));boolean light="light".equals(s.optString("themeMode","dark"));int text=light?android.graphics.Color.BLACK:android.graphics.Color.WHITE;int[] ids={R.id.quick_dial_title,R.id.quick_dial_one,R.id.quick_dial_two,R.id.quick_dial_three,R.id.quick_dial_four};for(int id:ids)v.setTextColor(id,text);int[] rows={R.id.quick_dial_one,R.id.quick_dial_two,R.id.quick_dial_three,R.id.quick_dial_four};for(int id:rows)v.setViewVisibility(id,View.GONE);ArrayList<Contact> contacts=contacts(s);PendingIntent open=open(c);v.setOnClickPendingIntent(R.id.quick_dial_root,open);if(contacts.isEmpty()){v.setViewVisibility(R.id.quick_dial_one,View.VISIBLE);v.setTextViewText(R.id.quick_dial_one,"Add numbers in WHT Home");v.setOnClickPendingIntent(R.id.quick_dial_one,open);return v;}int count=Math.min(contacts.size(),tall?4:3);for(int i=0;i<count;i++){Contact contact=contacts.get(i);int id=rows[i];v.setViewVisibility(id,View.VISIBLE);v.setTextViewText(id,contact.label);Intent dial=new Intent(Intent.ACTION_DIAL,Uri.parse("tel:"+contact.number));v.setOnClickPendingIntent(id,PendingIntent.getActivity(c,4300+i,dial,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));}return v;}
+ static PendingIntent open(Context c){Intent open=new Intent(c,MainActivity.class).putExtra("wht_open_screen","home").addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);return PendingIntent.getActivity(c,4200,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);}
+ static ArrayList<Contact> contacts(JSONObject s){ArrayList<Contact> out=new ArrayList<>();JSONArray list=s.optJSONArray("quickDialEntries");if(list!=null){for(int i=0;i<list.length();i++){JSONObject e=list.optJSONObject(i);if(e==null)continue;String number=digits(e.optString("number",""));if(number.isEmpty())continue;String label=e.optString("label","").trim();out.add(new Contact(label.isEmpty()?e.optString("number",number):label,number));}}if(out.isEmpty()){String legacy=s.optString("quickDialNumber","").trim(),number=digits(legacy);if(!number.isEmpty())out.add(new Contact("Quick Dial",number));}return out;}
+ static String digits(String raw){String value=raw==null?"":raw.trim();String clean=value.replaceAll("[^0-9]","");return value.startsWith("+")?"+"+clean:clean;}
+ public void onReceive(Context c,Intent i){super.onReceive(c,i);if(Intent.ACTION_CONFIGURATION_CHANGED.equals(i.getAction()))refreshAll(c);}
+ static class Contact{final String label,number;Contact(String label,String number){this.label=label;this.number=number;}}
+}
+JAVA
+
 cat > "$JAVA_DIR/NextShiftWidgetProvider.java" <<'JAVA'
 package com.workedhourstracker.app;
 import android.app.*; import android.appwidget.*; import android.content.*; import android.os.Bundle; import android.view.View; import android.widget.*; import org.json.JSONObject; import java.text.SimpleDateFormat; import java.util.*;
@@ -401,15 +440,18 @@ python - <<'PY'
 from pathlib import Path
 p=Path("android/app/src/main/AndroidManifest.xml"); text=p.read_text()
 r='''        <receiver android:name=".ClockWidgetProvider" android:exported="true" android:label="Clock In &amp; Out"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_clock_widget_info" /></receiver>
+        <receiver android:name=".QuickDialWidgetProvider" android:exported="true" android:label="Quick Dial"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_quick_dial_widget_info" /></receiver>
         <receiver android:name=".NextShiftWidgetProvider" android:exported="true" android:label="Upcoming Shifts"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_next_shift_widget_info" /></receiver>
         <receiver android:name=".ShiftProgressWidgetProvider" android:exported="true" android:label="Shift Progress"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_shift_progress_widget_info" /></receiver>
         <receiver android:name=".WhtNotificationTickReceiver" android:exported="false" />
 '''
 if '.ClockWidgetProvider' not in text:text=text.replace('    </application>',r+'    </application>')
+if '.QuickDialWidgetProvider' not in text:
+    text=text.replace('    </application>','        <receiver android:name=".QuickDialWidgetProvider" android:exported="true" android:label="Quick Dial"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_quick_dial_widget_info" /></receiver>\n    </application>')
 if '.ShiftProgressWidgetProvider' not in text:
     text=text.replace('    </application>','        <receiver android:name=".ShiftProgressWidgetProvider" android:exported="true" android:label="Shift Progress"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_shift_progress_widget_info" /></receiver>\n    </application>')
 if '.WhtNotificationTickReceiver' not in text:
     text=text.replace('    </application>','        <receiver android:name=".WhtNotificationTickReceiver" android:exported="false" />\n    </application>')
 p.write_text(text)
 PY
-echo "Added styled WHT Clock, Next Scheduled Shift, and Shift Progress home-screen widgets."
+echo "Added styled WHT Clock, Quick Dial, Upcoming Shifts, and Shift Progress home-screen widgets."
