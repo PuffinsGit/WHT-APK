@@ -73,6 +73,7 @@ public class MainActivity extends BridgeActivity {
         refreshWidgets();
     }
     private void refreshWidgets() {
+        WhtLauncherIcon.sync(this, WhtWidgetStyle.state(this));
         ClockWidgetProvider.refreshAll(this);
         NextShiftWidgetProvider.refreshAll(this);
         ShiftProgressWidgetProvider.refreshAll(this);
@@ -224,10 +225,12 @@ public class GallerySaverPlugin extends Plugin {
             boolean committed = getContext().getSharedPreferences(WIDGET_PREFS, 0)
                 .edit().putString(WIDGET_DATA, data).commit();
             if (!committed) throw new Exception("Android could not commit app data.");
+            org.json.JSONObject savedState = new org.json.JSONObject(data);
+            WhtLauncherIcon.sync(getContext(), savedState);
             ClockWidgetProvider.refreshAll(getContext());
             NextShiftWidgetProvider.refreshAll(getContext());
             ShiftProgressWidgetProvider.refreshAll(getContext());
-            WhtClockNotification.sync(getContext(), new org.json.JSONObject(data));
+            WhtClockNotification.sync(getContext(), savedState);
             JSObject result = new JSObject();
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) savePublicDocument(data);
@@ -251,7 +254,9 @@ public class GallerySaverPlugin extends Plugin {
                 data = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ? loadPublicDocument() : loadLegacyDocument();
                 if (data != null && !data.isEmpty()) getContext().getSharedPreferences(WIDGET_PREFS, 0).edit().putString(WIDGET_DATA, data).apply();
             }
-            WhtClockNotification.sync(getContext(), new org.json.JSONObject(data == null || data.isEmpty() ? "{}" : data));
+            org.json.JSONObject savedState = new org.json.JSONObject(data == null || data.isEmpty() ? "{}" : data);
+            WhtLauncherIcon.sync(getContext(), savedState);
+            WhtClockNotification.sync(getContext(), savedState);
             result.put("data", data == null ? "" : data);
             call.resolve(result);
         } catch (Exception error) {
