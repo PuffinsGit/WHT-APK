@@ -17,11 +17,12 @@
         --muted: #8e99aa;
         --purple: #7651ff;
         --purple2: #9a7bff;
+        --accent-soft: rgba(118, 81, 255, 0.18);
         --cyan: #16e0ca;
         --danger: #ff5d73;
         --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
-        --user-bg: #0b0f1b;
-        --user-bg-image: linear-gradient(145deg, #0b0f1b 0%, #19233c 52%, #382658 100%);
+        --user-bg: #11182a;
+        --user-bg-image: linear-gradient(145deg, #11182a 0%, #253354 52%, #4a3670 100%);
         --brand-gradient: linear-gradient(90deg, #a98cff, #ff8bd7);
       }
       :root[data-theme="light"] {
@@ -391,9 +392,9 @@
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
       }
       .day.active {
-        border-color: #7756ff;
+        border-color: var(--purple);
         box-shadow:
-          0 0 0 1px rgba(118, 81, 255, 0.22),
+          0 0 0 1px var(--accent-soft),
           0 12px 30px rgba(78, 50, 180, 0.13);
       }
       .dayhead {
@@ -546,7 +547,7 @@
       }
       .bottom-clear-actions button:hover,
       .bottom-clear-actions button:active {
-        background: rgba(118, 81, 255, 0.16);
+        background: var(--accent-soft);
         transform: none;
       }
       .rateinput {
@@ -772,8 +773,8 @@
       }
       .sidebar-pages button.active {
         border-color: var(--purple);
-        background: rgba(118, 81, 255, 0.18);
-        color: #c7baff;
+        background: var(--accent-soft);
+        color: var(--purple2);
       }
       .sidebar-actions,
       #sidebarTools > .actions {
@@ -813,8 +814,8 @@
       }
       .sidebar-actions > .export-menu[open] > summary {
         border-color: var(--purple);
-        background: rgba(118, 81, 255, 0.18);
-        color: #c7baff;
+        background: var(--accent-soft);
+        color: var(--purple2);
       }
       .sidebar-copyright {
         flex: 1;
@@ -838,9 +839,9 @@
         display: grid;
         place-items: center;
         border-radius: 13px;
-        border-color: #46516a;
-        background: rgba(118, 81, 255, 0.14);
-        color: #d8d0ff;
+        border-color: var(--purple);
+        background: var(--accent-soft);
+        color: var(--purple2);
         font-size: 22px;
         line-height: 1;
       }
@@ -1453,8 +1454,8 @@
         border-bottom: 0;
       }
       .schedule-day.active {
-        background: rgba(118, 81, 255, 0.045);
-        box-shadow: inset 2px 0 0 #7756ff;
+        background: var(--accent-soft);
+        box-shadow: inset 2px 0 0 var(--purple);
       }
       .schedule-dayhead {
         display: flex;
@@ -1513,8 +1514,8 @@
       }
       .schedule-time:focus {
         outline: none;
-        border-color: #7756ff;
-        box-shadow: 0 0 0 2px rgba(118, 81, 255, 0.14);
+        border-color: var(--purple);
+        box-shadow: 0 0 0 2px var(--accent-soft);
       }
       .schedule-clear {
         display: none;
@@ -1563,7 +1564,7 @@
       <div id="sidebarTools"></div>
       <div id="scheduleActionsSlot" hidden></div>
       <div class="sidebar-footer">
-        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.11</span></div>
+        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.12</span></div>
         <div class="sidebar-footer-actions">
           <button type="button" class="sidebar-settings-button" id="sidebarSettingsBtn" aria-label="Open settings" title="Settings">⚙</button>
         </div>
@@ -1674,7 +1675,7 @@
       <div class="note" id="workNote">
         Your entries are saved automatically to this device. A backup copy is also kept in Documents/WHT so it can survive an app reinstall.
       </div>
-      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.11</span></footer>
+      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.12</span></footer>
     </div>
 
     <div class="modalback" id="modalBack">
@@ -1777,16 +1778,24 @@
         target.use24Hour = target.use24Hour !== false;
         target.themeMode = target.themeMode === "light" ? "light" : "dark";
         target.backgroundColor = target.backgroundColor || "#070a0f";
-        target.darkBackground = target.darkBackground || "linear-gradient(145deg, #0b0f1b 0%, #19233c 52%, #382658 100%)";
+        target.darkBackground = target.darkBackground || "linear-gradient(145deg, #11182a 0%, #253354 52%, #4a3670 100%)";
         const brighterDarkBackgrounds = {
-          "linear-gradient(145deg, #060810 0%, #10162b 52%, #291744 100%)": "linear-gradient(145deg, #0b0f1b 0%, #19233c 52%, #382658 100%)",
-          "linear-gradient(145deg, #04131f 0%, #0b2940 50%, #17234b 100%)": "linear-gradient(145deg, #08202f 0%, #123a54 50%, #243763 100%)",
-          "linear-gradient(145deg, #10091c 0%, #291447 52%, #401b54 100%)": "linear-gradient(145deg, #1c102e 0%, #3a2059 52%, #5a2a70 100%)",
-          "linear-gradient(145deg, #090b0f 0%, #1a2029 52%, #282d36 100%)": "linear-gradient(145deg, #12161d 0%, #27303b 52%, #3a414c 100%)",
-          "linear-gradient(145deg, #06110d 0%, #0d2a20 52%, #173c31 100%)": "linear-gradient(145deg, #0d1e18 0%, #174033 52%, #275547 100%)",
-          "linear-gradient(145deg, #041218 0%, #06323c 52%, #124f5c 100%)": "linear-gradient(145deg, #0b222b 0%, #0f4654 52%, #1c6673 100%)",
-          "linear-gradient(145deg, #14070b 0%, #38121f 52%, #561b31 100%)": "linear-gradient(145deg, #241017 0%, #4b1d2b 52%, #6b2940 100%)",
-          "linear-gradient(145deg, #100e0d 0%, #29231f 52%, #3b322b 100%)": "linear-gradient(145deg, #1b1816 0%, #38302a 52%, #4c4238 100%)"
+          "linear-gradient(145deg, #060810 0%, #10162b 52%, #291744 100%)": "linear-gradient(145deg, #11182a 0%, #253354 52%, #4a3670 100%)",
+          "linear-gradient(145deg, #0b0f1b 0%, #19233c 52%, #382658 100%)": "linear-gradient(145deg, #11182a 0%, #253354 52%, #4a3670 100%)",
+          "linear-gradient(145deg, #04131f 0%, #0b2940 50%, #17234b 100%)": "linear-gradient(145deg, #0d2b3d 0%, #194b69 50%, #304a7e 100%)",
+          "linear-gradient(145deg, #08202f 0%, #123a54 50%, #243763 100%)": "linear-gradient(145deg, #0d2b3d 0%, #194b69 50%, #304a7e 100%)",
+          "linear-gradient(145deg, #10091c 0%, #291447 52%, #401b54 100%)": "linear-gradient(145deg, #271641 0%, #4a2b70 52%, #70408a 100%)",
+          "linear-gradient(145deg, #1c102e 0%, #3a2059 52%, #5a2a70 100%)": "linear-gradient(145deg, #271641 0%, #4a2b70 52%, #70408a 100%)",
+          "linear-gradient(145deg, #090b0f 0%, #1a2029 52%, #282d36 100%)": "linear-gradient(145deg, #1b222c 0%, #35414f 52%, #4b5563 100%)",
+          "linear-gradient(145deg, #12161d 0%, #27303b 52%, #3a414c 100%)": "linear-gradient(145deg, #1b222c 0%, #35414f 52%, #4b5563 100%)",
+          "linear-gradient(145deg, #06110d 0%, #0d2a20 52%, #173c31 100%)": "linear-gradient(145deg, #142b22 0%, #205341 52%, #34705d 100%)",
+          "linear-gradient(145deg, #0d1e18 0%, #174033 52%, #275547 100%)": "linear-gradient(145deg, #142b22 0%, #205341 52%, #34705d 100%)",
+          "linear-gradient(145deg, #041218 0%, #06323c 52%, #124f5c 100%)": "linear-gradient(145deg, #10313c 0%, #155b6b 52%, #268091 100%)",
+          "linear-gradient(145deg, #0b222b 0%, #0f4654 52%, #1c6673 100%)": "linear-gradient(145deg, #10313c 0%, #155b6b 52%, #268091 100%)",
+          "linear-gradient(145deg, #14070b 0%, #38121f 52%, #561b31 100%)": "linear-gradient(145deg, #331720 0%, #612538 52%, #843851 100%)",
+          "linear-gradient(145deg, #241017 0%, #4b1d2b 52%, #6b2940 100%)": "linear-gradient(145deg, #331720 0%, #612538 52%, #843851 100%)",
+          "linear-gradient(145deg, #100e0d 0%, #29231f 52%, #3b322b 100%)": "linear-gradient(145deg, #29231f 0%, #4b4037 52%, #625548 100%)",
+          "linear-gradient(145deg, #1b1816 0%, #38302a 52%, #4c4238 100%)": "linear-gradient(145deg, #29231f 0%, #4b4037 52%, #625548 100%)"
         };
         target.darkBackground = brighterDarkBackgrounds[target.darkBackground] || target.darkBackground;
         target.lightBackground = target.lightBackground || "linear-gradient(145deg, #dcecff 0%, #f1ecff 48%, #ffdff3 100%)";
@@ -1795,17 +1804,25 @@
       normaliseState(state);
       const systemTheme = window.matchMedia("(prefers-color-scheme: light)");
       state.themeMode = systemTheme.matches ? "light" : "dark";
-      function brandGradientFor(background, light) {
+      function accentForBackground(background, light) {
         if (light) {
-          if (background.includes("#d9f1ff")) return "linear-gradient(90deg, #1976b8, #586cd6)";
-          if (background.includes("#eee5ff")) return "linear-gradient(90deg, #7046c9, #c14a91)";
-          if (background.includes("#dff8ef")) return "linear-gradient(90deg, #16806d, #3973b8)";
-          return "linear-gradient(90deg, #4f73d9, #c1409a)";
+          if (background.includes("#d9f1ff")) return { primary: "#1976b8", secondary: "#586cd6", soft: "rgba(25, 118, 184, 0.16)", gradient: "linear-gradient(90deg, #1976b8, #586cd6)" };
+          if (background.includes("#eee5ff")) return { primary: "#7046c9", secondary: "#b03f83", soft: "rgba(112, 70, 201, 0.16)", gradient: "linear-gradient(90deg, #7046c9, #b03f83)" };
+          if (background.includes("#dff8ef")) return { primary: "#16806d", secondary: "#3973b8", soft: "rgba(22, 128, 109, 0.16)", gradient: "linear-gradient(90deg, #16806d, #3973b8)" };
+          if (background.includes("#fff0df")) return { primary: "#b85f2e", secondary: "#d08343", soft: "rgba(184, 95, 46, 0.16)", gradient: "linear-gradient(90deg, #b85f2e, #d08343)" };
+          if (background.includes("#ffe7ef")) return { primary: "#b83f6b", secondary: "#914bb7", soft: "rgba(184, 63, 107, 0.16)", gradient: "linear-gradient(90deg, #b83f6b, #914bb7)" };
+          if (background.includes("#e4f1df")) return { primary: "#4f7f49", secondary: "#698d57", soft: "rgba(79, 127, 73, 0.16)", gradient: "linear-gradient(90deg, #4f7f49, #698d57)" };
+          if (background.includes("#f7ecd9")) return { primary: "#8f6535", secondary: "#b07c42", soft: "rgba(143, 101, 53, 0.16)", gradient: "linear-gradient(90deg, #8f6535, #b07c42)" };
+          return { primary: "#546fd8", secondary: "#b33f91", soft: "rgba(84, 111, 216, 0.16)", gradient: "linear-gradient(90deg, #546fd8, #b33f91)" };
         }
-        if (background.includes("#08202f")) return "linear-gradient(90deg, #5ee7ff, #75a7ff)";
-        if (background.includes("#1c102e")) return "linear-gradient(90deg, #c99aff, #ff83d5)";
-        if (background.includes("#12161d")) return "linear-gradient(90deg, #d8e1ee, #9eacc0)";
-        return "linear-gradient(90deg, #a98cff, #ff8bd7)";
+        if (background.includes("#0d2b3d")) return { primary: "#2faee0", secondary: "#69d6ff", soft: "rgba(47, 174, 224, 0.18)", gradient: "linear-gradient(90deg, #2faee0, #69d6ff)" };
+        if (background.includes("#271641")) return { primary: "#ac64ff", secondary: "#e08dff", soft: "rgba(172, 100, 255, 0.18)", gradient: "linear-gradient(90deg, #ac64ff, #e08dff)" };
+        if (background.includes("#1b222c")) return { primary: "#8091a6", secondary: "#c4d0dd", soft: "rgba(128, 145, 166, 0.18)", gradient: "linear-gradient(90deg, #c4d0dd, #8091a6)" };
+        if (background.includes("#142b22")) return { primary: "#38bd89", secondary: "#74e3b6", soft: "rgba(56, 189, 137, 0.18)", gradient: "linear-gradient(90deg, #38bd89, #74e3b6)" };
+        if (background.includes("#10313c")) return { primary: "#20b8cd", secondary: "#72e1ed", soft: "rgba(32, 184, 205, 0.18)", gradient: "linear-gradient(90deg, #20b8cd, #72e1ed)" };
+        if (background.includes("#331720")) return { primary: "#e65b82", secondary: "#ff9ab4", soft: "rgba(230, 91, 130, 0.18)", gradient: "linear-gradient(90deg, #e65b82, #ff9ab4)" };
+        if (background.includes("#29231f")) return { primary: "#c18a62", secondary: "#e8b78f", soft: "rgba(193, 138, 98, 0.18)", gradient: "linear-gradient(90deg, #c18a62, #e8b78f)" };
+        return { primary: "#8067ff", secondary: "#b49cff", soft: "rgba(128, 103, 255, 0.18)", gradient: "linear-gradient(90deg, #8067ff, #b49cff)" };
       }
       function applyBackgroundColor() {
         const light = state.themeMode === "light";
@@ -1813,7 +1830,11 @@
         const color = light ? "#dcecff" : "#0b0f1b";
         document.documentElement.style.setProperty("--user-bg", color);
         document.documentElement.style.setProperty("--user-bg-image", background);
-        document.documentElement.style.setProperty("--brand-gradient", brandGradientFor(background, light));
+        const accent = accentForBackground(background, light);
+        document.documentElement.style.setProperty("--purple", accent.primary);
+        document.documentElement.style.setProperty("--purple2", accent.secondary);
+        document.documentElement.style.setProperty("--accent-soft", accent.soft);
+        document.documentElement.style.setProperty("--brand-gradient", accent.gradient);
         document.documentElement.style.backgroundColor = color;
         document.body.style.backgroundColor = color;
         const themeColor = document.getElementById("themeColor");
@@ -2439,14 +2460,14 @@
       };
       const backgroundPresets = {
         dark: [
-          ["Midnight", "linear-gradient(145deg, #0b0f1b 0%, #19233c 52%, #382658 100%)"],
-          ["Deep Blue", "linear-gradient(145deg, #08202f 0%, #123a54 50%, #243763 100%)"],
-          ["Deep Purple", "linear-gradient(145deg, #1c102e 0%, #3a2059 52%, #5a2a70 100%)"],
-          ["Graphite", "linear-gradient(145deg, #12161d 0%, #27303b 52%, #3a414c 100%)"],
-          ["Forest", "linear-gradient(145deg, #0d1e18 0%, #174033 52%, #275547 100%)"],
-          ["Ocean", "linear-gradient(145deg, #0b222b 0%, #0f4654 52%, #1c6673 100%)"],
-          ["Burgundy", "linear-gradient(145deg, #241017 0%, #4b1d2b 52%, #6b2940 100%)"],
-          ["Warm Slate", "linear-gradient(145deg, #1b1816 0%, #38302a 52%, #4c4238 100%)"]
+          ["Midnight", "linear-gradient(145deg, #11182a 0%, #253354 52%, #4a3670 100%)"],
+          ["Deep Blue", "linear-gradient(145deg, #0d2b3d 0%, #194b69 50%, #304a7e 100%)"],
+          ["Deep Purple", "linear-gradient(145deg, #271641 0%, #4a2b70 52%, #70408a 100%)"],
+          ["Graphite", "linear-gradient(145deg, #1b222c 0%, #35414f 52%, #4b5563 100%)"],
+          ["Forest", "linear-gradient(145deg, #142b22 0%, #205341 52%, #34705d 100%)"],
+          ["Ocean", "linear-gradient(145deg, #10313c 0%, #155b6b 52%, #268091 100%)"],
+          ["Burgundy", "linear-gradient(145deg, #331720 0%, #612538 52%, #843851 100%)"],
+          ["Warm Slate", "linear-gradient(145deg, #29231f 0%, #4b4037 52%, #625548 100%)"]
         ],
         light: [
           ["Soft Sky", "linear-gradient(145deg, #dcecff 0%, #f1ecff 48%, #ffdff3 100%)"],
@@ -2640,7 +2661,7 @@
         context.textAlign = "right";
         context.fillText("© 2026 Mark Breddy · Puffins", 1330, y);
         context.font = "500 14px system-ui,sans-serif";
-        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.11", 1330, y + 20);
+        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.12", 1330, y + 20);
         context.restore();
       }
       function drawPaydayMarker(context, row, x, y) {
@@ -2854,7 +2875,7 @@
             "",
           );
         });
-        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.11");
+        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.12");
         return lines.join("\n");
       }
       async function saveTxtDocument(content, fileName, exportType = "worked") {
@@ -3304,7 +3325,7 @@
         screen.innerHTML = `<div class="schedule-panel"><div class="schedule-days" id="scheduleDays"></div></div>
           <section class="summary schedule-summary" id="scheduleSummary">
             <div class="summarycard schedule-summary-card">
-              <div>
+              <div class="weekly-hours-cell" id="expectedHoursCell" role="button" tabindex="0" aria-label="Hold to show expected hours in decimal format">
                 <div class="summarylabel">Expected Hours</div>
                 <div class="summaryvalue" id="expectedHours">0 H 0 M</div>
               </div>
@@ -3391,6 +3412,11 @@
         }
         document.getElementById("expectedHours").textContent = hoursMinutesLabel(expected);
         document.getElementById("expectedGrossPay").textContent = money(expectedGross);
+        wireHoursHold(
+          document.getElementById("expectedHoursCell"),
+          document.getElementById("expectedHours"),
+          expected
+        );
         wireScheduleExportMenus();
       }
 
@@ -3462,7 +3488,7 @@
           `Expected Hours: ${hoursMinutesLabel(row.hours)} | Rate: ${money(row.rate)}/h | Expected Gross Pay: ${money(row.pay)}`,
           "",
         ));
-        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.11");
+        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.12");
         return lines.join("\n");
       }
 
@@ -3746,7 +3772,7 @@
           toast("Please enter a title and description");
           return;
         }
-        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.11`;
+        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.12`;
         window.location.href = `mailto:${REPORT_ISSUE_EMAIL}?subject=${encodeURIComponent(REPORT_ISSUE_SUBJECT)}&body=${encodeURIComponent(body)}`;
         returnFromIssueReport();
       }
