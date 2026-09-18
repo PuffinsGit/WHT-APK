@@ -61,6 +61,7 @@
         background-image: var(--user-bg-image);
         background-repeat: no-repeat;
         background-size: cover;
+        background-position: center;
         background-attachment: fixed;
         color: var(--text);
       }
@@ -276,6 +277,18 @@
       }
       .home-widget-add span { width:34px; height:34px; display:grid; place-items:center; border-radius:11px; background:rgba(118,81,255,.14); color:var(--purple2); font-size:22px; }
       :root[data-theme="light"] .home-widget-add { background:rgba(255,255,255,.72); }
+      :root[data-background-preset="wht"] .home-widget,
+      :root[data-background-preset="wht"] .home-widget-add {
+        background: linear-gradient(145deg, rgba(10, 13, 25, .94), rgba(46, 31, 88, .91));
+        border-color: rgba(154, 123, 255, .38);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+      :root[data-theme="light"][data-background-preset="wht"] .home-widget,
+      :root[data-theme="light"][data-background-preset="wht"] .home-widget-add {
+        background: linear-gradient(145deg, rgba(255, 255, 255, .91), rgba(235, 231, 255, .90));
+        border-color: rgba(112, 70, 201, .28);
+      }
       .home-widget-picker { display:grid; gap:9px; margin-top:16px; }
       .home-widget-picker button { text-align:left; padding:14px 16px; }
       .home-widget-picker strong { display:block; margin-bottom:3px; }
@@ -942,6 +955,9 @@
         border:1px solid var(--line);
         border-radius:12px;
         box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
+        background-position:center !important;
+        background-size:cover !important;
+        background-repeat:no-repeat !important;
       }
       .color-swatch.selected {
         border-color: var(--purple);
@@ -1608,7 +1624,7 @@
       <div id="sidebarTools"></div>
       <div id="scheduleActionsSlot" hidden></div>
       <div class="sidebar-footer">
-        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.17</span></div>
+        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.18</span></div>
         <div class="sidebar-footer-actions">
           <button type="button" class="sidebar-settings-button" id="sidebarSettingsBtn" aria-label="Open settings" title="Settings">⚙</button>
         </div>
@@ -1719,7 +1735,7 @@
       <div class="note" id="workNote">
         Your entries are saved automatically to this device. A backup copy is also kept in Documents/WHT so it can survive an app reinstall.
       </div>
-      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.17</span></footer>
+      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.18</span></footer>
     </div>
 
     <div class="modalback" id="modalBack">
@@ -1861,6 +1877,7 @@
       state.themeMode = systemTheme.matches ? "light" : "dark";
       function accentForBackground(background, light) {
         if (light) {
+          if (background.includes("wht-background-light.png")) return { primary: "#7651d8", secondary: "#a58bff", soft: "rgba(118, 81, 216, 0.16)", gradient: "linear-gradient(90deg, #7651d8, #b08dff)" };
           if (background.includes("#d9f1ff")) return { primary: "#1976b8", secondary: "#586cd6", soft: "rgba(25, 118, 184, 0.16)", gradient: "linear-gradient(90deg, #1976b8, #586cd6)" };
           if (background.includes("#eee5ff")) return { primary: "#7046c9", secondary: "#b03f83", soft: "rgba(112, 70, 201, 0.16)", gradient: "linear-gradient(90deg, #7046c9, #b03f83)" };
           if (background.includes("#dff8ef")) return { primary: "#16806d", secondary: "#3973b8", soft: "rgba(22, 128, 109, 0.16)", gradient: "linear-gradient(90deg, #16806d, #3973b8)" };
@@ -1870,6 +1887,7 @@
           if (background.includes("#f7ecd9")) return { primary: "#8f6535", secondary: "#b07c42", soft: "rgba(143, 101, 53, 0.16)", gradient: "linear-gradient(90deg, #8f6535, #b07c42)" };
           return { primary: "#546fd8", secondary: "#b33f91", soft: "rgba(84, 111, 216, 0.16)", gradient: "linear-gradient(90deg, #546fd8, #b33f91)" };
         }
+        if (background.includes("wht-background-dark.png")) return { primary: "#8d6bff", secondary: "#c0adff", soft: "rgba(141, 107, 255, 0.20)", gradient: "linear-gradient(90deg, #8d6bff, #c0adff)" };
         if (background.includes("#0d2b3d")) return { primary: "#2faee0", secondary: "#69d6ff", soft: "rgba(47, 174, 224, 0.18)", gradient: "linear-gradient(90deg, #2faee0, #69d6ff)" };
         if (background.includes("#271641")) return { primary: "#ac64ff", secondary: "#e08dff", soft: "rgba(172, 100, 255, 0.18)", gradient: "linear-gradient(90deg, #ac64ff, #e08dff)" };
         if (background.includes("#1b222c")) return { primary: "#8091a6", secondary: "#c4d0dd", soft: "rgba(128, 145, 166, 0.18)", gradient: "linear-gradient(90deg, #c4d0dd, #8091a6)" };
@@ -1882,6 +1900,8 @@
       function applyBackgroundColor() {
         const light = state.themeMode === "light";
         const background = light ? state.lightBackground : state.darkBackground;
+        const whtPreset = background.includes(light ? "wht-background-light.png" : "wht-background-dark.png");
+        document.documentElement.dataset.backgroundPreset = whtPreset ? "wht" : "standard";
         const color = light ? "#dcecff" : "#0b0f1b";
         document.documentElement.style.setProperty("--user-bg", color);
         document.documentElement.style.setProperty("--user-bg-image", background);
@@ -2636,6 +2656,7 @@
       };
       const backgroundPresets = {
         dark: [
+          ["WHT", "url('wht-background-dark.png')"],
           ["Midnight", "linear-gradient(145deg, #11182a 0%, #253354 52%, #4a3670 100%)"],
           ["Deep Blue", "linear-gradient(145deg, #0d2b3d 0%, #194b69 50%, #304a7e 100%)"],
           ["Deep Purple", "linear-gradient(145deg, #271641 0%, #4a2b70 52%, #70408a 100%)"],
@@ -2646,6 +2667,7 @@
           ["Warm Slate", "linear-gradient(145deg, #29231f 0%, #4b4037 52%, #625548 100%)"]
         ],
         light: [
+          ["WHT", "url('wht-background-light.png')"],
           ["Soft Sky", "linear-gradient(145deg, #dcecff 0%, #f1ecff 48%, #ffdff3 100%)"],
           ["Blue Mist", "linear-gradient(145deg, #d9f1ff 0%, #e8f2ff 52%, #dfe4ff 100%)"],
           ["Lavender", "linear-gradient(145deg, #eee5ff 0%, #f6edff 50%, #ffe5f4 100%)"],
@@ -2837,7 +2859,7 @@
         context.textAlign = "right";
         context.fillText("© 2026 Mark Breddy · Puffins", 1330, y);
         context.font = "500 14px system-ui,sans-serif";
-        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.17", 1330, y + 20);
+        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.18", 1330, y + 20);
         context.restore();
       }
       function drawPaydayMarker(context, row, x, y) {
@@ -3051,7 +3073,7 @@
             "",
           );
         });
-        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.17");
+        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.18");
         return lines.join("\n");
       }
       async function saveTxtDocument(content, fileName, exportType = "worked") {
@@ -3664,7 +3686,7 @@
           `Expected Hours: ${hoursMinutesLabel(row.hours)} | Rate: ${money(row.rate)}/h | Expected Gross Pay: ${money(row.pay)}`,
           "",
         ));
-        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.17");
+        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.18");
         return lines.join("\n");
       }
 
@@ -3948,7 +3970,7 @@
           toast("Please enter a title and description");
           return;
         }
-        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.17`;
+        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.18`;
         window.location.href = `mailto:${REPORT_ISSUE_EMAIL}?subject=${encodeURIComponent(REPORT_ISSUE_SUBJECT)}&body=${encodeURIComponent(body)}`;
         returnFromIssueReport();
       }
