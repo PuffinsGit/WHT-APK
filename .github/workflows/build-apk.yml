@@ -6,7 +6,7 @@ on:
     branches: ["main", "master"]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-apk:
@@ -69,9 +69,13 @@ jobs:
       - name: Name release APK
         run: cp android/app/build/outputs/apk/release/app-release.apk "WHT ALPHA v1.12.apk"
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: WHT-ALPHA-v1.12
-          path: WHT ALPHA v1.12.apk
-          if-no-files-found: error
+      - name: Publish APK to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete alpha-latest --cleanup-tag --yes || true
+          gh release create alpha-latest "WHT ALPHA v1.12.apk" \
+            --target "$GITHUB_SHA" \
+            --title "WHT ALPHA v1.12" \
+            --notes "Latest signed ALPHA build of WorkedHoursTracker (WHT)." \
+            --prerelease
