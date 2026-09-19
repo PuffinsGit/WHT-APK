@@ -57,7 +57,7 @@ jobs:
         env:
           WHT_KEYSTORE_PASSWORD: ${{ secrets.WHT_KEYSTORE_PASSWORD }}
           WHT_VERSION_CODE: ${{ github.run_number }}
-          WHT_VERSION_NAME: '1.22'
+          WHT_VERSION_NAME: '1.23'
         run: python ./scripts/apply-release-signing.py
 
       - name: Build signed release APK
@@ -67,15 +67,15 @@ jobs:
         run: chmod +x gradlew && ./gradlew assembleRelease
 
       - name: Name release APK
-        run: cp android/app/build/outputs/apk/release/app-release.apk "WHT ALPHA v1.22.apk"
+        run: cp android/app/build/outputs/apk/release/app-release.apk "WHT ALPHA v1.23.apk"
 
       - name: Publish APK to GitHub Releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete alpha-latest --cleanup-tag --yes || true
-          gh release create alpha-latest "WHT ALPHA v1.22.apk" \
+          gh release create alpha-latest "WHT ALPHA v1.23.apk" \
             --target "$GITHUB_SHA" \
-            --title "WHT ALPHA v1.22" \
+            --title "WHT ALPHA v1.23" \
             --notes "Latest signed ALPHA build of WorkedHoursTracker (WHT)." \
             --prerelease

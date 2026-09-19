@@ -89,6 +89,16 @@ for key, colours in palettes.items():
             out_dir / f"ic_launcher_{key}.png", optimize=True
         )
 
+# System surfaces such as active notifications resolve the icon from the
+# application manifest, not from the selected launcher activity alias.
+# Give the application its own WHT icon in each system theme.
+for density in sizes:
+    day = res / f"mipmap-{density}"
+    night = res / f"mipmap-night-{density}"
+    night.mkdir(parents=True, exist_ok=True)
+    (day / "wht_app_icon.png").write_bytes((day / "ic_launcher_light_soft_sky.png").read_bytes())
+    (night / "wht_app_icon.png").write_bytes((day / "ic_launcher_dark_midnight.png").read_bytes())
+
 for path in (
     res / "mipmap-anydpi-v26/ic_launcher.xml",
     res / "mipmap-anydpi-v26/ic_launcher_round.xml",
@@ -178,6 +188,12 @@ import re
 
 manifest = Path("android/app/src/main/AndroidManifest.xml")
 text = manifest.read_text()
+application = re.search(r'<application\b[^>]*>', text)
+if not application or 'android:icon=' not in application.group(0) or 'android:roundIcon=' not in application.group(0):
+    raise SystemExit("Could not find the application icons in AndroidManifest.xml")
+app_tag = re.sub(r'android:icon="[^"]+"', 'android:icon="@mipmap/wht_app_icon"', application.group(0))
+app_tag = re.sub(r'android:roundIcon="[^"]+"', 'android:roundIcon="@mipmap/wht_app_icon"', app_tag)
+text = text[:application.start()] + app_tag + text[application.end():]
 activity = re.search(r'<activity\b[^>]*android:name="\.MainActivity"[\s\S]*?</activity>', text)
 if not activity:
     raise SystemExit("Could not find MainActivity in AndroidManifest.xml")

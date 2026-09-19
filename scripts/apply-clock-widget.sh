@@ -244,6 +244,9 @@ final class WhtClockNotification {
    String startLabel=new SimpleDateFormat(state.optBoolean("use24Hour",true)?"HH:mm":"h:mm a",Locale.getDefault()).format(new Date(startedAt));
    if(!state.optBoolean("use24Hour",true))startLabel=startLabel.toLowerCase(Locale.getDefault());
    String elapsedLabel=elapsedLabel(startedAt,System.currentTimeMillis());
+   long breakStartedAt=e.optLong("breakStartedAt",0L);
+   String breakLabel=breakStartedAt>0L?breakElapsedLabel(breakStartedAt,System.currentTimeMillis()):"";
+   String notificationText=breakLabel.isEmpty()?elapsedLabel:elapsedLabel+" · On Break: "+breakLabel;
    ShiftProgressWidgetProvider.TodayShift scheduledShift=ShiftProgressWidgetProvider.today(state);
    int shiftPercent=ShiftProgressWidgetProvider.completion(state,scheduledShift);
    String progressLabel=shiftPercent+"% COMPLETE";
@@ -256,7 +259,7 @@ final class WhtClockNotification {
    b.setSmallIcon(R.drawable.wht_notification_small)
     .setLargeIcon(BitmapFactory.decodeResource(c.getResources(),R.drawable.wht_notification_logo))
     .setContentTitle("Clocked In At "+startLabel)
-    .setContentText(elapsedLabel)
+    .setContentText(notificationText)
     .setSubText(progressLabel)
     .setProgress(Math.max(100,shiftPercent),shiftPercent,false)
     .setWhen(startedAt)
@@ -279,7 +282,7 @@ final class WhtClockNotification {
    // Request Android 16 Live Update promotion. Samsung maps eligible promoted
    // ongoing notifications onto its Now Bar surface.
    requestPromotion(b);
-   setShortStatus(b,elapsedLabel);
+   setShortStatus(b,breakLabel.isEmpty()?elapsedLabel:"Break "+breakLabel);
    if(Build.VERSION.SDK_INT>=26)b.setBadgeIconType(Notification.BADGE_ICON_SMALL);
    m.notify(ID,b.build());
    scheduleTick(c,true);
@@ -310,6 +313,10 @@ final class WhtClockNotification {
   long hours=seconds/3600L;
   long mins=(seconds%3600L)/60L;
   return hours+"h "+mins+"m";
+ }
+ static String breakElapsedLabel(long startedAt,long now){
+  long minutes=Math.max(0,(now-startedAt)/60000L);
+  return String.format(Locale.US,"%02d:%02d",minutes/60L,minutes%60L);
  }
 static void setShortStatus(Notification.Builder b,String text){
   try{
