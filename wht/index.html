@@ -37,10 +37,10 @@
         --muted: #657184;
         --cyan: #087f77;
         --shadow: 0 18px 50px rgba(32, 46, 66, 0.15);
-        --footer-text: #253142;
-        --footer-version: #536176;
-        --footer-bg: rgba(255, 255, 255, 0.68);
-        --footer-border: rgba(37, 49, 66, 0.16);
+        --footer-text: #111827;
+        --footer-version: #2f3f55;
+        --footer-bg: rgba(255, 255, 255, 0.9);
+        --footer-border: rgba(17, 24, 39, 0.26);
       }
       * {
         box-sizing: border-box;
@@ -130,7 +130,7 @@
         align-items: center;
         gap: 7px;
         min-height: 30px;
-        padding: 0 11px;
+        padding: 6px 11px;
         border: 1px solid rgba(55, 211, 103, 0.55);
         border-radius: 999px;
         background: rgba(25, 139, 64, 0.2);
@@ -141,15 +141,26 @@
         letter-spacing: 0.04em;
         text-transform: uppercase;
       }
-      .clocked-in-indicator::before {
-        content: "";
+      .clocked-in-dot {
         width: 8px;
         height: 8px;
+        flex: 0 0 8px;
         border-radius: 50%;
         background: #3ee86f;
         box-shadow: 0 0 0 4px rgba(62, 232, 111, 0.13);
         animation: clocked-in-pulse 1.8s ease-in-out infinite;
       }
+      .clocked-in-copy { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
+      .clocked-in-main { font-weight: 900; }
+      .break-live-status {
+        margin-top: 2px;
+        color: #ffd27b;
+        font-size: 9px;
+        font-weight: 850;
+        letter-spacing: 0.02em;
+        text-transform: none;
+      }
+      .break-live-status[hidden] { display: none; }
       .clocked-in-indicator[hidden],
       .sidebar-toggle[hidden] { display: none !important; }
       body.calendar-open .sidebar-toggle { display: none !important; }
@@ -326,10 +337,33 @@
         .home-progress-layout { grid-template-columns:118px minmax(0,1fr); gap:15px; }
         .home-progress-ring { width:112px; }
         .home-progress-ring::before { width:84px; }
+        .contacts-header { flex-direction:column; }
+        .contacts-header-actions { width:100%; }
+        .contacts-header-actions button { flex:1; }
       }
       .home-screen[hidden] {
         display: none;
       }
+      .contacts-screen {
+        width: min(760px, 100%);
+        min-height: calc(100vh - 150px);
+        margin: 28px auto 0;
+      }
+      .contacts-screen[hidden] { display: none; }
+      .contacts-header { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:20px; }
+      .contacts-header h1 { margin:0 0 6px; font-size:25px; letter-spacing:-.5px; }
+      .contacts-header p { margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+      .contacts-header-actions { display:flex; gap:8px; flex:0 0 auto; }
+      .contacts-list { display:grid; gap:11px; }
+      .contact-card { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 17px; border:1px solid var(--line); border-radius:15px; background:var(--panel); box-shadow:var(--shadow); }
+      .contact-card strong, .contact-card span { display:block; }
+      .contact-card span { margin-top:4px; color:var(--muted); font-size:12px; }
+      .contact-call { min-width:92px; padding:11px 15px; border:1px solid var(--purple); border-radius:11px; background:var(--purple); color:#fff; font-weight:900; text-align:center; text-decoration:none; }
+      .contacts-empty { padding:28px; border:1px dashed var(--line); border-radius:16px; color:var(--muted); text-align:center; background:var(--panel); }
+      .sidebar-order-list { display:grid; gap:8px; margin-top:14px; }
+      .sidebar-order-row { display:grid; grid-template-columns:minmax(0,1fr) 42px 42px; gap:7px; align-items:center; padding:8px 9px 8px 13px; border:1px solid var(--line); border-radius:12px; background:var(--panel2); }
+      .sidebar-order-row strong { font-size:13px; }
+      .sidebar-order-row button { min-height:38px; padding:0; font-size:18px; }
       .report-screen {
         width: min(720px, 100%);
         margin: 28px auto 0;
@@ -814,6 +848,14 @@
         padding: 0;
         font-size: 20px;
       }
+      .sidebar-head-actions { display:flex; align-items:center; gap:7px; }
+      .sidebar-reorder {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        font-size: 18px;
+        line-height: 1;
+      }
       .sidebar-label {
         margin: 18px 4px 8px;
         color: #778397;
@@ -963,7 +1005,17 @@
         text-align: center;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
       }
-      :root[data-theme="light"] .copyright { text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8); }
+      :root[data-theme="light"] .copyright {
+        text-shadow: none;
+        box-shadow: 0 8px 24px rgba(32, 46, 66, 0.18);
+      }
+      :root[data-theme="light"] .sidebar-copyright {
+        color: #111827;
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(17, 24, 39, 0.24);
+        text-shadow: none;
+      }
+      :root[data-theme="light"] .sidebar-copyright .app-version { color: #2f3f55; }
       .color-palette {
         display:grid;
         grid-template-columns:repeat(4, minmax(0,1fr));
@@ -1639,17 +1691,21 @@
       <div class="sidebar-head">
         <img src="header-logo.png" alt="" />
         <div class="sidebar-title">WHT Menu</div>
-        <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">×</button>
+        <div class="sidebar-head-actions">
+          <button type="button" class="sidebar-reorder" id="sidebarReorder" aria-label="Rearrange menu" title="Rearrange menu">↕</button>
+          <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">×</button>
+        </div>
       </div>
       <nav class="sidebar-pages" id="sidebarPages">
         <button type="button" id="homePageBtn">Home</button>
         <button type="button" id="workPageBtn" class="active">Worked Hours</button>
+        <button type="button" id="contactsPageBtn">Contacts</button>
       </nav>
       <div class="sidebar-label" id="sidebarToolsLabel">Tools</div>
       <div id="sidebarTools"></div>
       <div id="scheduleActionsSlot" hidden></div>
       <div class="sidebar-footer">
-        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.20</span></div>
+        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.22</span></div>
         <div class="sidebar-footer-actions">
           <button type="button" class="sidebar-settings-button" id="sidebarSettingsBtn" aria-label="Open settings" title="Settings">⚙</button>
         </div>
@@ -1665,7 +1721,10 @@
         <div class="brand">
           <span class="accent">WorkedHours</span><span>Tracker</span>
         </div>
-        <div class="clocked-in-indicator" id="clockedInIndicator" hidden>Clocked In</div>
+        <div class="clocked-in-indicator" id="clockedInIndicator" hidden>
+          <span class="clocked-in-dot" aria-hidden="true"></span>
+          <span class="clocked-in-copy"><span class="clocked-in-main">Clocked In</span><span class="break-live-status" id="breakLiveStatus" hidden></span></span>
+        </div>
       </header>
       <section class="home-screen" id="homeScreen" hidden>
         <div class="home-dashboard">
@@ -1673,6 +1732,7 @@
           <div class="home-widget-list" id="homeWidgetList"></div>
         </div>
       </section>
+      <section class="contacts-screen" id="contactsScreen" hidden></section>
       <section class="report-screen" id="reportIssueScreen" hidden>
         <h1>Report Issue</h1>
         <p>Describe the problem below. Send will open your email app with the report ready to review.</p>
@@ -1760,7 +1820,7 @@
       <div class="note" id="workNote">
         Your entries are saved automatically to this device. A backup copy is also kept in Documents/WHT so it can survive an app reinstall.
       </div>
-      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.20</span></footer>
+      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.22</span></footer>
     </div>
 
     <div class="modalback" id="modalBack">
@@ -1870,6 +1930,11 @@
               .filter((entry) => entry.number)
           : (legacyQuickDial ? [{ id: "quick-legacy", label: "Quick Dial", number: legacyQuickDial }] : []);
         target.quickDialNumber = legacyQuickDial;
+        const sidebarKeys = ["home", "work", "schedule", "contacts", "calendar"];
+        const savedSidebarOrder = Array.isArray(target.sidebarPageOrder)
+          ? target.sidebarPageOrder.filter((key, index, values) => sidebarKeys.includes(key) && values.indexOf(key) === index)
+          : [];
+        target.sidebarPageOrder = [...savedSidebarOrder, ...sidebarKeys.filter((key) => !savedSidebarOrder.includes(key))];
         target.payday = Number.isInteger(Number(target.payday)) && Number(target.payday) >= 0 && Number(target.payday) <= 6 ? Number(target.payday) : 5;
         target.use24Hour = target.use24Hour !== false;
         target.themeMode = target.themeMode === "light" ? "light" : "dark";
@@ -1900,6 +1965,41 @@
       }
       const state = readLocalState();
       normaliseState(state);
+      const sidebarPageConfig = {
+        home: { id: "homePageBtn", label: "Home" },
+        work: { id: "workPageBtn", label: "Worked Hours" },
+        schedule: { id: "scheduleBtn", label: "Schedule" },
+        contacts: { id: "contactsPageBtn", label: "Contacts" },
+        calendar: { id: "calendarBtn", label: "Calendar" },
+      };
+      function applySidebarPageOrder() {
+        state.sidebarPageOrder.forEach((key) => {
+          const button = document.getElementById(sidebarPageConfig[key]?.id);
+          if (button) sidebarPages.appendChild(button);
+        });
+      }
+      function openSidebarReorder() {
+        const rows = state.sidebarPageOrder.map((key, index) => {
+          const item = sidebarPageConfig[key];
+          return `<div class="sidebar-order-row"><strong>${item.label}</strong><button type="button" data-sidebar-move="${key}:up" aria-label="Move ${item.label} up"${index === 0 ? " disabled" : ""}>↑</button><button type="button" data-sidebar-move="${key}:down" aria-label="Move ${item.label} down"${index === state.sidebarPageOrder.length - 1 ? " disabled" : ""}>↓</button></div>`;
+        }).join("");
+        showModal(`<h2>Rearrange Menu</h2><p>Move the sidebar tabs into the order that suits you.</p><div class="sidebar-order-list">${rows}</div><div class="modalactions"><button class="primary" onclick="closeModal()">Done</button></div>`);
+        document.querySelectorAll("[data-sidebar-move]").forEach((button) => button.onclick = () => {
+          const [key, direction] = button.dataset.sidebarMove.split(":");
+          const from = state.sidebarPageOrder.indexOf(key);
+          const to = direction === "up" ? from - 1 : from + 1;
+          if (from < 0 || to < 0 || to >= state.sidebarPageOrder.length) return;
+          [state.sidebarPageOrder[from], state.sidebarPageOrder[to]] = [state.sidebarPageOrder[to], state.sidebarPageOrder[from]];
+          save();
+          applySidebarPageOrder();
+          openSidebarReorder();
+        });
+      }
+      applySidebarPageOrder();
+      document.getElementById("sidebarReorder").onclick = () => {
+        closeSidebar();
+        openSidebarReorder();
+      };
       const systemTheme = window.matchMedia("(prefers-color-scheme: light)");
       state.themeMode = systemTheme.matches ? "light" : "dark";
       function accentForBackground(background, light) {
@@ -2336,8 +2436,19 @@
           state.quickDialNumber = updated[0]?.number || "";
           save();
           closeModal();
-          renderHomeDashboard();
+          if (activeScreen === "contacts") renderContactsScreen();
+          else if (activeScreen === "home") renderHomeDashboard();
         };
+      }
+      function renderContactsScreen() {
+        const screen = document.getElementById("contactsScreen");
+        const contacts = state.quickDialEntries || [];
+        const list = contacts.length
+          ? `<div class="contacts-list">${contacts.map((entry) => `<div class="contact-card"><div><strong>${escapeHTML(entry.label)}</strong><span>${escapeHTML(entry.number)}</span></div><a class="contact-call" href="tel:${escapeHTML(dialablePhoneNumber(entry.number))}">Call</a></div>`).join("")}</div>`
+          : `<div class="contacts-empty">No contacts have been added yet. Add a coworker or workplace number for quick access.</div>`;
+        screen.innerHTML = `<div class="contacts-header"><div><h1>Contacts</h1><p>Keep useful work contacts together and open them directly in your phone app.</p></div><div class="contacts-header-actions"><button type="button" id="manageContactsBtn">Manage</button><button type="button" class="primary" id="addContactBtn">Add Contact</button></div></div>${list}`;
+        document.getElementById("addContactBtn").onclick = () => openQuickDialManager(true);
+        document.getElementById("manageContactsBtn").onclick = () => openQuickDialManager(false);
       }
       function openHomeWidgetPicker() {
         const available = Object.entries(HOME_WIDGETS).filter(([type]) => !state.homeWidgets.includes(type));
@@ -2355,9 +2466,14 @@
         const todayEntry = state.entries[iso(now)] || {};
         const active = Boolean(todayEntry.start && !todayEntry.finish);
         document.getElementById("clockedInIndicator").hidden = !active;
+        const breakStatus = document.getElementById("breakLiveStatus");
         const details = document.getElementById("activeShiftDetails");
         details.hidden = !active;
-        if (!active) return;
+        if (!active) {
+          breakStatus.hidden = true;
+          breakStatus.textContent = "";
+          return;
+        }
         const startMinutes = parseTime(todayEntry.start);
         const startedAt = new Date(now);
         startedAt.setHours(Math.floor(startMinutes / 60), startMinutes % 60, 0, 0);
@@ -2370,6 +2486,17 @@
           month: "short",
         });
         details.textContent = `${dayDate} — ${hours}h ${minutes}m`;
+        const breakStartedAt = Number(todayEntry.breakStartedAt || 0);
+        if (breakStartedAt > 0) {
+          const breakSeconds = Math.max(0, Math.floor((now.getTime() - breakStartedAt) / 1000));
+          const breakHours = String(Math.floor(breakSeconds / 3600)).padStart(2, "0");
+          const breakMinutes = String(Math.floor((breakSeconds % 3600) / 60)).padStart(2, "0");
+          breakStatus.textContent = `On Break: ${breakHours}:${breakMinutes}`;
+          breakStatus.hidden = false;
+        } else {
+          breakStatus.hidden = true;
+          breakStatus.textContent = "";
+        }
       }
       setInterval(refreshClockedInIndicator, 1000);
       function hoursMinutesLabel(hours) {
@@ -2498,10 +2625,14 @@
       }
 
       function refreshScreen() {
-        if (activeScreen === "schedule") showScheduleScreen();
-        else if (activeScreen === "home") showHomeScreen();
+        if (activeScreen === "schedule") showScheduleScreen(false);
+        else if (activeScreen === "home") showHomeScreen(false);
+        else if (activeScreen === "contacts") showContactsScreen(false);
         else if (activeScreen === "report") showReportIssueScreen();
-        else render();
+        else {
+          render();
+          restoreScreenScroll("work");
+        }
       }
 
       function focusTodayCard() {
@@ -2578,6 +2709,9 @@
           entry.breakStartedAt = now.getTime();
           state.entries[key] = entry;
           save();
+          const plugin = window.Capacitor?.Plugins?.GallerySaver;
+          if (plugin?.playClockTone) plugin.playClockTone().catch(() => {});
+          refreshClockedInIndicator();
           toast("Break started");
           return;
         }
@@ -2593,6 +2727,8 @@
         delete entry.breakStartedAt;
         state.entries[key] = entry;
         save();
+        const plugin = window.Capacitor?.Plugins?.GallerySaver;
+        if (plugin?.playClockTone) plugin.playClockTone().catch(() => {});
         refreshScreen();
         toast(`Break ended · ${minutes} min`);
       }
@@ -2606,6 +2742,10 @@
       document.getElementById("workPageBtn").addEventListener("click", (e) => {
         e.preventDefault();
         showWorkScreen();
+      });
+      document.getElementById("contactsPageBtn").addEventListener("click", (e) => {
+        e.preventDefault();
+        showContactsScreen();
       });
       document.getElementById("scheduleBtn").addEventListener("click", (e) => {
         e.preventDefault();
@@ -2897,7 +3037,7 @@
         context.textAlign = "right";
         context.fillText("© 2026 Mark Breddy · Puffins", 1330, y);
         context.font = "500 14px system-ui,sans-serif";
-        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.20", 1330, y + 20);
+        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.22", 1330, y + 20);
         context.restore();
       }
       function drawPaydayMarker(context, row, x, y) {
@@ -3111,7 +3251,7 @@
             "",
           );
         });
-        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.20");
+        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.22");
         return lines.join("\n");
       }
       async function saveTxtDocument(content, fileName, exportType = "worked") {
@@ -3527,7 +3667,9 @@
 
       // Defensive fallback for older saved states.
       state.scheduleEntries = state.scheduleEntries || {};
-      let activeScreen = "home";
+      const screenSessionKey = "wht-active-screen";
+      const savedSessionScreen = sessionStorage.getItem(screenSessionKey);
+      let activeScreen = ["home", "work", "schedule", "contacts"].includes(savedSessionScreen) ? savedSessionScreen : "home";
       let reportReturnScreen = "work";
 
       function scheduleEntry(i) {
@@ -3675,7 +3817,12 @@
       function scheduleRowsForRange(start, end) {
         const rows = [];
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-          const e = state.scheduleEntries[iso(d)] || {};
+          const key = iso(d);
+          const scheduled = state.scheduleEntries[key] || {};
+          const worked = state.entries[key] || {};
+          const isWorked = Boolean(worked.start || worked.finish);
+          const isScheduled = !isWorked && Boolean(scheduled.start || scheduled.finish);
+          const e = isWorked ? worked : scheduled;
           const dayNumber = d.getDay();
           const hourlyRate = dayNumber === 6
             ? Number(state.saturdayRate || 0)
@@ -3693,13 +3840,16 @@
             hours,
             rate: hourlyRate,
             pay: hours * hourlyRate,
+            isWorked,
+            isScheduled,
+            status: isWorked ? "Worked" : isScheduled ? "Scheduled to Work" : "",
           });
         }
         return rows;
       }
 
       function scheduleRowsForAll() {
-        return Object.keys(state.scheduleEntries)
+        return [...new Set([...Object.keys(state.scheduleEntries), ...Object.keys(state.entries)])]
           .sort()
           .map((key) => {
             const date = new Date(key + "T00:00:00");
@@ -3719,23 +3869,20 @@
           "Shift Details",
           "-------------",
         ];
-        rows.forEach((row) => lines.push(
-          txtShiftHeading(row),
-          `Expected Hours: ${hoursMinutesLabel(row.hours)} | Rate: ${money(row.rate)}/h | Expected Gross Pay: ${money(row.pay)}`,
-          "",
-        ));
-        lines.push("", `Expected Hours: ${hoursMinutesLabel(totalHours)}`, `Expected Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.20");
+        rows.forEach((row) => {
+          if (!row.isWorked && !row.isScheduled) return;
+          lines.push(
+            `${txtShiftHeading(row)}${row.isScheduled ? " [SCHEDULED TO WORK]" : ""}`,
+            `${row.isWorked ? "Worked Hours" : "Expected Hours"}: ${hoursMinutesLabel(row.hours)} | Rate: ${money(row.rate)}/h | ${row.isWorked ? "Gross Pay" : "Expected Gross Pay"}: ${money(row.pay)}`,
+            "",
+          );
+        });
+        lines.push("", `Total Shift Hours: ${hoursMinutesLabel(totalHours)}`, `Combined Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.22");
         return lines.join("\n");
       }
 
       function scheduleExpectedHours(rows) {
-        return rows.reduce((total, r) => {
-          const start = parseTime(r.start), finish = parseTime(r.finish);
-          if (start < 0 || finish < 0) return total;
-          let end = finish;
-          if (end <= start) end += 1440;
-          return total + Math.max(0, (end - start) / 60);
-        }, 0);
+        return rows.reduce((total, row) => total + (Number(row.hours) || 0), 0);
       }
 
       async function buildScheduleExportCanvas(rows, start, end) {
@@ -3774,8 +3921,10 @@
         x.fillStyle = "#8e99aa";
         x.font = "800 17px system-ui,sans-serif";
         x.fillText("DAY / DATE", 100, 248);
-        x.fillText("START", 760, 248);
-        x.fillText("END", 1040, 248);
+        x.fillText("STATUS", 405, 248);
+        x.fillText("START", 790, 248);
+        x.fillText("END", 1000, 248);
+        x.fillText("HOURS", 1190, 248);
 
         rows.forEach((r, i) => {
           const y = top + i * rowHeight;
@@ -3789,10 +3938,16 @@
           x.fillStyle = "#8e99aa";
           x.font = "600 17px system-ui,sans-serif";
           x.fillText(fmtDate(r.dateObject, false), 100, y + 60);
+          if (r.status) {
+            x.fillStyle = r.isWorked ? "#66dda0" : "#c4adff";
+            x.font = "800 16px system-ui,sans-serif";
+            x.fillText(r.status.toUpperCase(), 405, y + 47);
+          }
           x.fillStyle = "#f4f6fb";
           x.font = "700 21px system-ui,sans-serif";
-          x.fillText(r.start, 760, y + 47);
-          x.fillText(r.finish, 1040, y + 47);
+          x.fillText(r.start, 790, y + 47);
+          x.fillText(r.finish, 1000, y + 47);
+          if (r.isWorked || r.isScheduled) x.fillText(hoursMinutesLabel(r.hours), 1190, y + 47);
         });
 
         const expected = scheduleExpectedHours(rows);
@@ -3802,7 +3957,7 @@
         x.fill();
         x.fillStyle = "#8e99aa";
         x.font = "800 18px system-ui,sans-serif";
-        x.fillText("EXPECTED HOURS", 105, summaryY + 31);
+        x.fillText("TOTAL SHIFT HOURS", 105, summaryY + 31);
         x.fillStyle = "#f4f6fb";
         x.font = "900 34px system-ui,sans-serif";
         x.fillText(expected.toFixed(2) + " h", 105, summaryY + 67);
@@ -3931,23 +4086,26 @@
       function setScreenVisibility(screen) {
         const isHome = screen === "home";
         const isSchedule = screen === "schedule";
+        const isContacts = screen === "contacts";
         const isReport = screen === "report";
         document.getElementById("appRoot").classList.toggle("schedule-mode", isSchedule);
-        document.querySelector(".weekbar").hidden = isHome || isReport;
-        document.getElementById("days").hidden = isHome || isSchedule || isReport;
-        document.getElementById("workSummary").hidden = isHome || isSchedule || isReport;
+        document.querySelector(".weekbar").hidden = isHome || isContacts || isReport;
+        document.getElementById("days").hidden = isHome || isSchedule || isContacts || isReport;
+        document.getElementById("workSummary").hidden = isHome || isSchedule || isContacts || isReport;
         document.getElementById("scheduleScreen").classList.toggle("active", isSchedule);
-        document.getElementById("scheduleScreen").hidden = isHome || isReport;
-        document.getElementById("workActions").hidden = isHome || isSchedule || isReport;
+        document.getElementById("scheduleScreen").hidden = isHome || isContacts || isReport;
+        document.getElementById("workActions").hidden = isHome || isSchedule || isContacts || isReport;
         document.getElementById("scheduleActionsSlot").hidden = !isSchedule;
-        document.getElementById("sidebarToolsLabel").hidden = isHome;
-        document.getElementById("bottomClearActions").hidden = isHome || isReport;
-        document.getElementById("workNote").hidden = isHome || isSchedule || isReport;
+        document.getElementById("sidebarToolsLabel").hidden = isHome || isContacts;
+        document.getElementById("bottomClearActions").hidden = isHome || isContacts || isReport;
+        document.getElementById("workNote").hidden = isHome || isSchedule || isContacts || isReport;
         document.getElementById("homeScreen").hidden = !isHome;
+        document.getElementById("contactsScreen").hidden = !isContacts;
         document.getElementById("reportIssueScreen").hidden = !isReport;
         document.getElementById("homePageBtn").classList.toggle("active", isHome);
-        document.getElementById("workPageBtn").classList.toggle("active", !isHome && !isSchedule);
+        document.getElementById("workPageBtn").classList.toggle("active", screen === "work");
         document.getElementById("scheduleBtn").classList.toggle("active", isSchedule);
+        document.getElementById("contactsPageBtn").classList.toggle("active", isContacts);
         document.getElementById("sidebarToggle").hidden = isReport;
         refreshClockedInIndicator();
       }
@@ -3963,31 +4121,69 @@
         requestAnimationFrame(reset);
       }
 
-      function showHomeScreen() {
-        activeScreen = "home";
+      function screenScrollKey(screen) {
+        return `wht-scroll-${screen}`;
+      }
+
+      function rememberCurrentScroll() {
+        if (!["home", "work", "schedule", "contacts"].includes(activeScreen)) return;
+        sessionStorage.setItem(screenScrollKey(activeScreen), String(window.scrollY || document.documentElement.scrollTop || 0));
+      }
+
+      function restoreScreenScroll(screen) {
+        const position = Math.max(0, Number(sessionStorage.getItem(screenScrollKey(screen))) || 0);
+        requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, position)));
+      }
+
+      function activateScreen(screen) {
+        if (activeScreen !== screen) rememberCurrentScroll();
+        activeScreen = screen;
+        if (["home", "work", "schedule", "contacts"].includes(screen)) sessionStorage.setItem(screenSessionKey, screen);
+      }
+
+      window.addEventListener("scroll", () => {
+        if (["home", "work", "schedule", "contacts"].includes(activeScreen)) {
+          sessionStorage.setItem(screenScrollKey(activeScreen), String(window.scrollY || document.documentElement.scrollTop || 0));
+        }
+      }, { passive: true });
+
+      function showHomeScreen(resetScroll = true) {
+        activateScreen("home");
         setScreenVisibility("home");
         renderHomeDashboard();
-        scrollPageTop();
+        if (resetScroll) scrollPageTop();
+        else restoreScreenScroll("home");
       }
 
-      function showWorkScreen() {
-        activeScreen = "work";
+      function showWorkScreen(resetScroll = true) {
+        activateScreen("work");
         setScreenVisibility("work");
         render();
-        scrollPageTop();
+        if (resetScroll) scrollPageTop();
+        else restoreScreenScroll("work");
       }
 
-      function showScheduleScreen() {
-        activeScreen = "schedule";
+      function showScheduleScreen(resetScroll = true) {
+        activateScreen("schedule");
         setScreenVisibility("schedule");
         renderSchedule();
-        scrollPageTop();
+        if (resetScroll) scrollPageTop();
+        else restoreScreenScroll("schedule");
+      }
+
+      function showContactsScreen(resetScroll = true) {
+        activateScreen("contacts");
+        setScreenVisibility("contacts");
+        renderContactsScreen();
+        if (resetScroll) scrollPageTop();
+        else restoreScreenScroll("contacts");
       }
 
       function showReportIssueScreen() {
-        if (activeScreen !== "report") reportReturnScreen = activeScreen === "schedule" ? "schedule" : activeScreen === "home" ? "home" : "work";
+        if (activeScreen !== "report") reportReturnScreen = ["schedule", "home", "contacts"].includes(activeScreen) ? activeScreen : "work";
         closeModal();
         closeSidebar();
+        rememberCurrentScroll();
         activeScreen = "report";
         setScreenVisibility("report");
         scrollPageTop();
@@ -3997,6 +4193,7 @@
       function returnFromIssueReport() {
         if (reportReturnScreen === "schedule") showScheduleScreen();
         else if (reportReturnScreen === "home") showHomeScreen();
+        else if (reportReturnScreen === "contacts") showContactsScreen();
         else showWorkScreen();
         openSettingsHub();
       }
@@ -4008,7 +4205,7 @@
           toast("Please enter a title and description");
           return;
         }
-        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.20`;
+        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.22`;
         window.location.href = `mailto:${REPORT_ISSUE_EMAIL}?subject=${encodeURIComponent(REPORT_ISSUE_SUBJECT)}&body=${encodeURIComponent(body)}`;
         returnFromIssueReport();
       }
