@@ -53,6 +53,40 @@ ring_draw.text(((280 - (box[2] - box[0])) / 2, 100), "0%", font=percent_font, fi
 box = ring_draw.textbbox((0, 0), "COMPLETE", font=small)
 ring_draw.text(((280 - (box[2] - box[0])) / 2, 171), "COMPLETE", font=small, fill=(255, 255, 255, 190))
 ring_preview.save("android/app/src/main/res/drawable-nodpi/wht_progress_ring_preview.png")
+
+calendar_preview = Image.new("RGBA", (520, 390), (0, 0, 0, 0))
+cal = ImageDraw.Draw(calendar_preview)
+cal.rounded_rectangle((4, 4, 516, 386), radius=34, fill=(12, 19, 39, 255), outline=(86, 70, 130, 255), width=2)
+try:
+    cal_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 27)
+    cal_week = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 13)
+    cal_day = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
+except OSError:
+    cal_title = cal_week = cal_day = ImageFont.load_default()
+title = "September 2026"
+box = cal.textbbox((0, 0), title, font=cal_title)
+cal.text(((520 - (box[2] - box[0])) / 2, 18), title, font=cal_title, fill="white")
+weekdays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+left, top, cell_w, cell_h = 22, 88, 68, 45
+for index, label in enumerate(weekdays):
+    box = cal.textbbox((0, 0), label, font=cal_week)
+    cal.text((left + index * cell_w + (cell_w - (box[2] - box[0])) / 2, 64), label, font=cal_week, fill=(190, 198, 216, 255))
+for day in range(1, 31):
+    slot = day  # September 2026 starts on Tuesday (column index 1).
+    row, col = slot // 7, slot % 7
+    x0, y0 = left + col * cell_w + 4, top + row * cell_h + 3
+    fill = (25, 32, 48, 255)
+    outline = (62, 73, 96, 255)
+    if day in (2, 9, 16): fill, outline = (25, 76, 55, 255), (69, 212, 131, 210)
+    elif day in (5, 12, 19, 23, 24): fill, outline = (46, 34, 82, 255), (154, 123, 255, 210)
+    cal.rounded_rectangle((x0, y0, x0 + 60, y0 + 38), radius=9, fill=fill, outline=outline, width=2)
+    value = str(day)
+    box = cal.textbbox((0, 0), value, font=cal_day)
+    cal.text((x0 + (60 - (box[2] - box[0])) / 2, y0 + 9), value, font=cal_day, fill="white")
+logo = Image.open("wht/header-logo.png").convert("RGBA")
+logo.thumbnail((38, 38), Image.Resampling.LANCZOS)
+calendar_preview.alpha_composite(logo, (520 - logo.width - 13, 12))
+calendar_preview.save("android/app/src/main/res/drawable-nodpi/wht_calendar_preview.png")
 PY
 
 cat > "$RES_DIR/layout/wht_clock_widget.xml" <<'XML'
@@ -126,6 +160,13 @@ cat > "$RES_DIR/layout/wht_shift_progress_widget.xml" <<'XML'
 </FrameLayout>
 XML
 
+cat > "$RES_DIR/layout/wht_calendar_widget.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/calendar_widget_root" android:layout_width="match_parent" android:layout_height="match_parent">
+  <ImageView android:id="@+id/calendar_widget_image" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_calendar_preview" android:contentDescription="Work calendar" />
+</FrameLayout>
+XML
+
 cat > "$RES_DIR/drawable/wht_widget_background.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>
 <level-list xmlns:android="http://schemas.android.com/apk/res/android">
@@ -179,6 +220,9 @@ cat > "$RES_DIR/xml/wht_next_shift_widget_info.xml" <<'XML'
 XML
 cat > "$RES_DIR/xml/wht_shift_progress_widget_info.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?><appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:initialLayout="@layout/wht_shift_progress_widget" android:previewLayout="@layout/wht_shift_progress_widget" android:previewImage="@drawable/wht_shift_progress_preview" android:minWidth="180dp" android:minHeight="110dp" android:minResizeWidth="40dp" android:minResizeHeight="40dp" android:resizeMode="horizontal|vertical" android:targetCellWidth="3" android:targetCellHeight="2" android:updatePeriodMillis="1800000" android:widgetCategory="home_screen" />
+XML
+cat > "$RES_DIR/xml/wht_calendar_widget_info.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:initialLayout="@layout/wht_calendar_widget" android:previewLayout="@layout/wht_calendar_widget" android:previewImage="@drawable/wht_calendar_preview" android:minWidth="250dp" android:minHeight="180dp" android:minResizeWidth="120dp" android:minResizeHeight="110dp" android:resizeMode="horizontal|vertical" android:targetCellWidth="4" android:targetCellHeight="3" android:updatePeriodMillis="1800000" android:widgetCategory="home_screen" />
 XML
 cat > "$JAVA_DIR/WhtWidgetStyle.java" <<'JAVA'
 package com.workedhourstracker.app;
@@ -381,9 +425,9 @@ public class ClockWidgetProvider extends AppWidgetProvider {
  static RemoteViews view(Context c,JSONObject s){RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.wht_clock_widget);v.setImageViewBitmap(R.id.widget_background,WhtWidgetStyle.background(s));boolean light="light".equals(s.optString("themeMode","dark"));int text=light?android.graphics.Color.BLACK:android.graphics.Color.WHITE;int[] ids={R.id.widget_clock_in,R.id.widget_clock_out,R.id.widget_break_in,R.id.widget_break_out,R.id.widget_confirmation};for(int id:ids)v.setTextColor(id,text);v.setViewVisibility(R.id.widget_confirmation,View.GONE);v.setOnClickPendingIntent(R.id.widget_clock_in,pending(c,IN,101));v.setOnClickPendingIntent(R.id.widget_clock_out,pending(c,OUT,102));v.setOnClickPendingIntent(R.id.widget_break_in,pending(c,BREAK_IN,103));v.setOnClickPendingIntent(R.id.widget_break_out,pending(c,BREAK_OUT,104));return v;}
  static PendingIntent pending(Context c,String a,int n){return PendingIntent.getBroadcast(c,n,new Intent(c,ClockWidgetProvider.class).setAction(a),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);}
  public void onReceive(Context c,Intent i){super.onReceive(c,i);String a=i.getAction();if(Intent.ACTION_CONFIGURATION_CHANGED.equals(a)){refreshAll(c);return;}if(!IN.equals(a)&&!OUT.equals(a)&&!BREAK_IN.equals(a)&&!BREAK_OUT.equals(a))return;PendingResult result=goAsync();new Thread(()->{if(IN.equals(a)||OUT.equals(a))record(c,IN.equals(a)?"start":"finish",IN.equals(a)?"Clocked In":"Clocked Out");else recordBreak(c,BREAK_IN.equals(a));try{Thread.sleep(1900);}catch(InterruptedException ignored){Thread.currentThread().interrupt();}refreshAll(c);result.finish();}).start();}
- void record(Context c,String field,String message){try{Date now=new Date();String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(now),time=new SimpleDateFormat("HH:mm",Locale.US).format(now);JSONObject s=WhtWidgetStyle.state(c),entries=s.optJSONObject("entries");if(entries==null){entries=new JSONObject();s.put("entries",entries);}JSONObject e=entries.optJSONObject(date);if(e==null)e=new JSONObject();e.put(field,time);if("start".equals(field))e.remove("finish");entries.put(date,e);s.put("savedAt",System.currentTimeMillis());c.getSharedPreferences(WhtWidgetStyle.PREFS,0).edit().putString(WhtWidgetStyle.DATA,s.toString()).commit();WhtClockNotification.sync(c,s);WhtClockSound.play(c);showConfirmation(c,s,message);}catch(Exception e){Toast.makeText(c,"WHT could not save the time",Toast.LENGTH_LONG).show();}}
+ void record(Context c,String field,String message){try{Date now=new Date();String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(now),time=new SimpleDateFormat("HH:mm",Locale.US).format(now);JSONObject s=WhtWidgetStyle.state(c),entries=s.optJSONObject("entries");if(entries==null){entries=new JSONObject();s.put("entries",entries);}JSONObject e=entries.optJSONObject(date);if(e==null)e=new JSONObject();e.put(field,time);if("start".equals(field))e.remove("finish");entries.put(date,e);s.put("savedAt",System.currentTimeMillis());c.getSharedPreferences(WhtWidgetStyle.PREFS,0).edit().putString(WhtWidgetStyle.DATA,s.toString()).commit();WhtClockNotification.sync(c,s);CalendarWidgetProvider.refreshAll(c);WhtClockSound.play(c);showConfirmation(c,s,message);}catch(Exception e){Toast.makeText(c,"WHT could not save the time",Toast.LENGTH_LONG).show();}}
  void recordBreak(Context c,boolean starting){try{long now=System.currentTimeMillis();String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(new Date(now));JSONObject s=WhtWidgetStyle.state(c),entries=s.optJSONObject("entries");if(entries==null){entries=new JSONObject();s.put("entries",entries);}JSONObject e=entries.optJSONObject(date);if(e==null||e.optString("start","").isEmpty()||!e.optString("finish","").isEmpty()){showConfirmation(c,s,"Clock In First");return;}long started=e.optLong("breakStartedAt",0L);if(starting){if(started>0L){showConfirmation(c,s,"Break Already Started");return;}e.put("breakStartedAt",now);entries.put(date,e);persist(c,s);WhtClockSound.play(c);showConfirmation(c,s,"Break Started");return;}if(started<=0L){showConfirmation(c,s,"No Active Break");return;}int minutes=(int)Math.max(1L,(now-started+59999L)/60000L);e.put("breakMin",e.optInt("breakMin",0)+minutes);if(isBreakUnpaid(s,date,e,now))e.put("unpaidBreakMin",e.optInt("unpaidBreakMin",0)+minutes);e.remove("breakStartedAt");entries.put(date,e);persist(c,s);WhtClockSound.play(c);showConfirmation(c,s,"Break Ended · "+minutes+" min");}catch(Exception ignored){Toast.makeText(c,"WHT could not save the break",Toast.LENGTH_LONG).show();}}
- static void persist(Context c,JSONObject s)throws Exception{s.put("savedAt",System.currentTimeMillis());if(!c.getSharedPreferences(WhtWidgetStyle.PREFS,0).edit().putString(WhtWidgetStyle.DATA,s.toString()).commit())throw new Exception("Save failed");WhtClockNotification.sync(c,s);}
+ static void persist(Context c,JSONObject s)throws Exception{s.put("savedAt",System.currentTimeMillis());if(!c.getSharedPreferences(WhtWidgetStyle.PREFS,0).edit().putString(WhtWidgetStyle.DATA,s.toString()).commit())throw new Exception("Save failed");WhtClockNotification.sync(c,s);CalendarWidgetProvider.refreshAll(c);}
  static boolean isBreakUnpaid(JSONObject s,String date,JSONObject worked,long now){double hours=scheduledHours(s,date);if(hours<=0){try{SimpleDateFormat p=new SimpleDateFormat("yyyy-MM-dd HH:mm",Locale.US);Date start=p.parse(date+" "+worked.optString("start"));hours=Math.max(0d,(now-start.getTime())/3600000d);}catch(Exception ignored){hours=0d;}}double thirty=s.optDouble("break30Threshold",6d),ten=s.optDouble("break10Threshold",.5d);if(hours>=thirty)return s.optBoolean("break30Unpaid",false);if(hours>=ten)return s.optBoolean("break10Unpaid",false);return false;}
  static double scheduledHours(JSONObject s,String date){try{JSONObject all=s.optJSONObject("scheduleEntries"),e=all==null?null:all.optJSONObject(date);if(e==null)return 0d;int start=timeMinutes(e.optString("start")),finish=timeMinutes(e.optString("finish"));if(start<0||finish<0)return 0d;if(finish<=start)finish+=1440;return (finish-start)/60d;}catch(Exception ignored){return 0d;}}
  static int timeMinutes(String value){try{String[] p=value.split(":");if(p.length!=2)return-1;return Integer.parseInt(p[0])*60+Integer.parseInt(p[1]);}catch(Exception ignored){return-1;}}
@@ -443,6 +487,33 @@ public class ShiftProgressWidgetProvider extends AppWidgetProvider {
 }
 JAVA
 
+cat > "$JAVA_DIR/CalendarWidgetProvider.java" <<'JAVA'
+package com.workedhourstracker.app;
+import android.app.*; import android.appwidget.*; import android.content.*; import android.graphics.*; import android.os.Bundle; import android.widget.RemoteViews; import org.json.JSONObject; import java.text.SimpleDateFormat; import java.util.*;
+public class CalendarWidgetProvider extends AppWidgetProvider {
+ public void onUpdate(Context c,AppWidgetManager m,int[] ids){JSONObject s=WhtWidgetStyle.state(c);for(int id:ids)m.updateAppWidget(id,view(c,s,m.getAppWidgetOptions(id)));}
+ public void onAppWidgetOptionsChanged(Context c,AppWidgetManager m,int id,Bundle options){m.updateAppWidget(id,view(c,WhtWidgetStyle.state(c),options));}
+ public static void refreshAll(Context c){AppWidgetManager m=AppWidgetManager.getInstance(c);JSONObject s=WhtWidgetStyle.state(c);for(int id:m.getAppWidgetIds(new ComponentName(c,CalendarWidgetProvider.class)))m.updateAppWidget(id,view(c,s,m.getAppWidgetOptions(id)));}
+ static RemoteViews view(Context c,JSONObject s,Bundle options){int width=Math.max(360,Math.min(560,options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,250)*2));int height=Math.max(270,Math.min(420,options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,180)*2));RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.wht_calendar_widget);v.setImageViewBitmap(R.id.calendar_widget_image,render(c,s,width,height));Intent open=new Intent(c,MainActivity.class).putExtra("wht_open_screen","calendar").addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);v.setOnClickPendingIntent(R.id.calendar_widget_root,PendingIntent.getActivity(c,4800,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));return v;}
+ static Bitmap render(Context context,JSONObject state,int width,int height){
+  Bitmap image=Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);Canvas canvas=new Canvas(image);Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);boolean light="light".equals(state.optString("themeMode","dark"));int text=light?Color.rgb(17,21,28):Color.WHITE,muted=light?Color.rgb(70,79,96):Color.rgb(190,198,216);int[] colors=WhtWidgetStyle.palette(state);paint.setShader(new LinearGradient(0,0,width,height,colors[0],colors[1],Shader.TileMode.CLAMP));canvas.drawRoundRect(3,3,width-3,height-3,30,30,paint);paint.setShader(null);
+  float scale=Math.min(width/520f,height/390f);Calendar now=Calendar.getInstance(),first=(Calendar)now.clone();first.set(Calendar.DAY_OF_MONTH,1);int year=now.get(Calendar.YEAR),month=now.get(Calendar.MONTH),days=first.getActualMaximum(Calendar.DAY_OF_MONTH),leading=(first.get(Calendar.DAY_OF_WEEK)+5)%7;String monthTitle=new SimpleDateFormat("MMMM yyyy",Locale.getDefault()).format(first.getTime());
+  paint.setColor(text);paint.setTypeface(Typeface.create(Typeface.DEFAULT,Typeface.BOLD));paint.setTextSize(Math.max(18f,27f*scale));paint.setTextAlign(Paint.Align.CENTER);canvas.drawText(monthTitle,width/2f,Math.max(30f,38f*scale),paint);
+  try{Bitmap logo=BitmapFactory.decodeResource(context.getResources(),R.drawable.wht_widget_logo);if(logo!=null){float size=Math.max(27f,38f*scale);canvas.drawBitmap(logo,null,new RectF(width-size-12f*scale,10f*scale,width-12f*scale,10f*scale+size),paint);}}catch(Exception ignored){}
+  String[] labels={"MON","TUE","WED","THU","FRI","SAT","SUN"};float left=20f*scale,right=20f*scale,headerY=Math.max(57f,66f*scale),gridTop=Math.max(70f,80f*scale),cellWidth=(width-left-right)/7f,cellHeight=(height-gridTop-15f*scale)/6f;paint.setTextSize(Math.max(9f,12f*scale));paint.setColor(muted);for(int i=0;i<7;i++)canvas.drawText(labels[i],left+cellWidth*(i+.5f),headerY,paint);
+  JSONObject entries=state.optJSONObject("entries"),schedule=state.optJSONObject("scheduleEntries");SimpleDateFormat keyFormat=new SimpleDateFormat("yyyy-MM-dd",Locale.US);String today=keyFormat.format(now.getTime());
+  for(int day=1;day<=days;day++){
+   int slot=leading+day-1,row=slot/7,col=slot%7;Calendar date=(Calendar)first.clone();date.set(Calendar.DAY_OF_MONTH,day);String key=keyFormat.format(date.getTime());JSONObject worked=entries==null?null:entries.optJSONObject(key),planned=schedule==null?null:schedule.optJSONObject(key);boolean completed=worked!=null&&!worked.optString("start","").isEmpty()&&!worked.optString("finish","").isEmpty(),active=worked!=null&&!worked.optString("start","").isEmpty()&&worked.optString("finish","").isEmpty(),scheduled=planned!=null&&!planned.optString("start","").isEmpty()&&!planned.optString("finish","").isEmpty();float x0=left+col*cellWidth+3f*scale,y0=gridTop+row*cellHeight+3f*scale,x1=left+(col+1)*cellWidth-3f*scale,y1=gridTop+(row+1)*cellHeight-3f*scale;
+   paint.setStyle(Paint.Style.FILL);paint.setColor(light?0x2211151C:0x25151B28);if(completed)paint.setColor(light?0x3345D483:0x3D45D483);else if(active)paint.setColor(light?0x33F2BA54:0x3DF2BA54);else if(scheduled)paint.setColor(light?0x339A7BFF:0x3D9A7BFF);canvas.drawRoundRect(x0,y0,x1,y1,Math.max(6f,9f*scale),Math.max(6f,9f*scale),paint);
+   int statusColor=completed?Color.rgb(69,212,131):active?Color.rgb(242,186,84):scheduled?Color.rgb(154,123,255):muted;if(completed||active||scheduled){paint.setColor(statusColor);canvas.drawCircle((x0+x1)/2f,y1-Math.max(4f,6f*scale),Math.max(2f,2.6f*scale),paint);}if(key.equals(today)){paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(Math.max(2f,2.4f*scale));paint.setColor(light?Color.rgb(90,70,205):Color.rgb(174,150,255));canvas.drawRoundRect(x0,y0,x1,y1,Math.max(6f,9f*scale),Math.max(6f,9f*scale),paint);paint.setStyle(Paint.Style.FILL);}
+   paint.setColor(text);paint.setTextSize(Math.max(11f,15f*scale));paint.setTypeface(Typeface.create(Typeface.DEFAULT,Typeface.BOLD));Paint.FontMetrics metrics=paint.getFontMetrics();float baseline=(y0+y1)/2f-(metrics.ascent+metrics.descent)/2f-(completed||active||scheduled?2f*scale:0);canvas.drawText(String.valueOf(day),(x0+x1)/2f,baseline,paint);
+  }
+  return image;
+ }
+ public void onReceive(Context c,Intent i){super.onReceive(c,i);if(Intent.ACTION_CONFIGURATION_CHANGED.equals(i.getAction()))refreshAll(c);}
+}
+JAVA
+
 python - <<'PY'
 from pathlib import Path
 p=Path("android/app/src/main/AndroidManifest.xml"); text=p.read_text()
@@ -450,6 +521,7 @@ r='''        <receiver android:name=".ClockWidgetProvider" android:exported="tru
         <receiver android:name=".QuickDialWidgetProvider" android:exported="true" android:label="Quick Dial"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_quick_dial_widget_info" /></receiver>
         <receiver android:name=".NextShiftWidgetProvider" android:exported="true" android:label="Upcoming Shifts"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_next_shift_widget_info" /></receiver>
         <receiver android:name=".ShiftProgressWidgetProvider" android:exported="true" android:label="Shift Progress"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_shift_progress_widget_info" /></receiver>
+        <receiver android:name=".CalendarWidgetProvider" android:exported="true" android:label="Calendar"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_calendar_widget_info" /></receiver>
         <receiver android:name=".WhtNotificationTickReceiver" android:exported="false" />
 '''
 if '.ClockWidgetProvider' not in text:text=text.replace('    </application>',r+'    </application>')
@@ -457,8 +529,10 @@ if '.QuickDialWidgetProvider' not in text:
     text=text.replace('    </application>','        <receiver android:name=".QuickDialWidgetProvider" android:exported="true" android:label="Quick Dial"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_quick_dial_widget_info" /></receiver>\n    </application>')
 if '.ShiftProgressWidgetProvider' not in text:
     text=text.replace('    </application>','        <receiver android:name=".ShiftProgressWidgetProvider" android:exported="true" android:label="Shift Progress"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_shift_progress_widget_info" /></receiver>\n    </application>')
+if '.CalendarWidgetProvider' not in text:
+    text=text.replace('    </application>','        <receiver android:name=".CalendarWidgetProvider" android:exported="true" android:label="Calendar"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/wht_calendar_widget_info" /></receiver>\n    </application>')
 if '.WhtNotificationTickReceiver' not in text:
     text=text.replace('    </application>','        <receiver android:name=".WhtNotificationTickReceiver" android:exported="false" />\n    </application>')
 p.write_text(text)
 PY
-echo "Added styled WHT Clock, Quick Dial, Upcoming Shifts, and Shift Progress home-screen widgets."
+echo "Added styled Clock, Quick Dial, Upcoming Shifts, Shift Progress, and Calendar home-screen widgets."

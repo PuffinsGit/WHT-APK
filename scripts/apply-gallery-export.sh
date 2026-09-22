@@ -78,6 +78,7 @@ public class MainActivity extends BridgeActivity {
         QuickDialWidgetProvider.refreshAll(this);
         NextShiftWidgetProvider.refreshAll(this);
         ShiftProgressWidgetProvider.refreshAll(this);
+        CalendarWidgetProvider.refreshAll(this);
     }
     private void openRequestedScreen(Intent intent) {
         if (intent == null) return;
@@ -91,6 +92,8 @@ public class MainActivity extends BridgeActivity {
             javascript = "if(typeof showWorkScreen==='function'){if(typeof closeSidebar==='function')closeSidebar();viewMonday=monday(new Date());showWorkScreen();if(typeof focusTodayCard==='function')focusTodayCard();}";
         } else if ("home".equals(destination)) {
             javascript = "if(typeof showHomeScreen==='function'){if(typeof closeSidebar==='function')closeSidebar();showHomeScreen();}";
+        } else if ("calendar".equals(destination)) {
+            javascript = "if(document.getElementById('calendarBtn')){if(typeof closeSidebar==='function')closeSidebar();if(typeof monday==='function')viewMonday=monday(new Date());document.getElementById('calendarBtn').click();}";
         } else return;
         getBridge().getWebView().postDelayed(() -> getBridge().getWebView().evaluateJavascript(javascript, null), 900);
     }
@@ -274,6 +277,7 @@ public class GallerySaverPlugin extends Plugin {
             QuickDialWidgetProvider.refreshAll(getContext());
             NextShiftWidgetProvider.refreshAll(getContext());
             ShiftProgressWidgetProvider.refreshAll(getContext());
+            CalendarWidgetProvider.refreshAll(getContext());
             WhtClockNotification.sync(getContext(), savedState);
             JSObject result = new JSObject();
             try {
@@ -301,6 +305,7 @@ public class GallerySaverPlugin extends Plugin {
             org.json.JSONObject savedState = new org.json.JSONObject(data == null || data.isEmpty() ? "{}" : data);
             WhtLauncherIcon.sync(getContext(), savedState);
             QuickDialWidgetProvider.refreshAll(getContext());
+            CalendarWidgetProvider.refreshAll(getContext());
             WhtClockNotification.sync(getContext(), savedState);
             result.put("data", data == null ? "" : data);
             call.resolve(result);
