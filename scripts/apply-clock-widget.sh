@@ -41,8 +41,9 @@ centered("COMPLETE", 202, small, (255, 255, 255, 190))
 centered("12:30 pm – 5:00 pm", 315, time_font, "white")
 
 logo = Image.open("wht/header-logo.png").convert("RGBA")
-logo.thumbnail((42, 42), Image.Resampling.LANCZOS)
-canvas.alpha_composite(logo, (size - logo.width - 12, 12))
+logo.thumbnail((120, 120), Image.Resampling.LANCZOS)
+logo.putalpha(18)
+canvas.alpha_composite(logo, ((size - logo.width) // 2, (size - logo.height) // 2))
 canvas.save("android/app/src/main/res/drawable-nodpi/wht_shift_progress_preview.png")
 
 ring_preview = Image.new("RGBA", (280, 280), (0, 0, 0, 0))
@@ -84,8 +85,9 @@ for day in range(1, 31):
     box = cal.textbbox((0, 0), value, font=cal_day)
     cal.text((x0 + (60 - (box[2] - box[0])) / 2, y0 + 9), value, font=cal_day, fill="white")
 logo = Image.open("wht/header-logo.png").convert("RGBA")
-logo.thumbnail((38, 38), Image.Resampling.LANCZOS)
-calendar_preview.alpha_composite(logo, (520 - logo.width - 13, 12))
+logo.thumbnail((150, 150), Image.Resampling.LANCZOS)
+logo.putalpha(18)
+calendar_preview.alpha_composite(logo, ((520 - logo.width) // 2, (390 - logo.height) // 2))
 calendar_preview.save("android/app/src/main/res/drawable-nodpi/wht_calendar_preview.png")
 PY
 
@@ -93,6 +95,7 @@ cat > "$RES_DIR/layout/wht_clock_widget.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:theme="@android:style/Theme.DeviceDefault.DayNight">
   <ImageView android:id="@+id/widget_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />
+  <ImageView android:layout_width="92dp" android:layout_height="92dp" android:layout_gravity="center" android:alpha="0.06" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />
   <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="8dp">
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:paddingBottom="4dp">
       <TextView android:id="@+id/widget_clock_in" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:background="@drawable/wht_widget_clock_in" android:text="Clock In" android:textColor="@color/wht_widget_text" android:textSize="15sp" android:textStyle="bold" />
@@ -111,6 +114,7 @@ cat > "$RES_DIR/layout/wht_quick_dial_widget.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/quick_dial_root" android:layout_width="match_parent" android:layout_height="match_parent">
   <ImageView android:id="@+id/quick_dial_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />
+  <ImageView android:layout_width="92dp" android:layout_height="92dp" android:layout_gravity="center" android:alpha="0.06" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />
   <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:paddingLeft="10dp" android:paddingTop="6dp" android:paddingRight="10dp" android:paddingBottom="6dp">
     <TextView android:id="@+id/quick_dial_title" android:layout_width="match_parent" android:layout_height="24dp" android:gravity="center" android:paddingLeft="34dp" android:paddingRight="34dp" android:text="Quick Dial" android:textColor="@color/wht_widget_text" android:textSize="15sp" android:textStyle="bold" />
     <TextView android:id="@+id/quick_dial_one" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="3dp" android:gravity="center" android:background="@drawable/wht_widget_quick_dial_button" android:maxLines="1" android:text="Contact 1" android:textColor="@color/wht_widget_text" android:textSize="13sp" android:textStyle="bold" />
@@ -118,7 +122,6 @@ cat > "$RES_DIR/layout/wht_quick_dial_widget.xml" <<'XML'
     <TextView android:id="@+id/quick_dial_three" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="5dp" android:gravity="center" android:background="@drawable/wht_widget_quick_dial_button" android:maxLines="1" android:text="Contact 3" android:textColor="@color/wht_widget_text" android:textSize="13sp" android:textStyle="bold" />
     <TextView android:id="@+id/quick_dial_four" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="5dp" android:gravity="center" android:background="@drawable/wht_widget_quick_dial_button" android:maxLines="1" android:text="Contact 4" android:textColor="@color/wht_widget_text" android:textSize="13sp" android:textStyle="bold" android:visibility="gone" />
   </LinearLayout>
-  <ImageView android:layout_width="26dp" android:layout_height="26dp" android:layout_gravity="top|right" android:layout_marginTop="5dp" android:layout_marginRight="7dp" android:src="@drawable/wht_widget_logo" android:contentDescription="WHT" />
 </FrameLayout>
 XML
 
@@ -126,6 +129,7 @@ cat > "$RES_DIR/layout/wht_next_shift_widget.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/next_shift_root" android:layout_width="match_parent" android:layout_height="match_parent">
   <ImageView android:id="@+id/next_shift_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />
+  <ImageView android:layout_width="92dp" android:layout_height="92dp" android:layout_gravity="center" android:alpha="0.06" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />
   <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:paddingLeft="12dp" android:paddingTop="5dp" android:paddingRight="12dp" android:paddingBottom="6dp">
     <TextView android:id="@+id/next_shift_title" android:layout_width="match_parent" android:layout_height="23dp" android:gravity="center" android:paddingLeft="38dp" android:paddingRight="38dp" android:text="Upcoming Shifts" android:textAlignment="center" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" />
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
@@ -143,7 +147,6 @@ cat > "$RES_DIR/layout/wht_next_shift_widget.xml" <<'XML'
       </LinearLayout>
     </LinearLayout>
   </LinearLayout>
-  <ImageView android:layout_width="28dp" android:layout_height="28dp" android:layout_gravity="top|right" android:layout_marginTop="4dp" android:layout_marginRight="6dp" android:src="@drawable/wht_widget_logo" android:contentDescription="WHT" />
 </FrameLayout>
 XML
 
@@ -151,12 +154,12 @@ cat > "$RES_DIR/layout/wht_shift_progress_widget.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/progress_widget_root" android:layout_width="match_parent" android:layout_height="match_parent">
   <ImageView android:id="@+id/progress_widget_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />
+  <ImageView android:layout_width="108dp" android:layout_height="108dp" android:layout_gravity="center" android:alpha="0.06" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />
   <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical" android:padding="10dp">
     <TextView android:id="@+id/progress_widget_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="Today's Shift" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" />
     <ImageView android:id="@+id/progress_ring" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:adjustViewBounds="true" android:scaleType="centerInside" android:src="@drawable/wht_progress_ring_preview" android:contentDescription="Shift completion" />
     <TextView android:id="@+id/progress_shift_time" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:maxLines="1" android:text="No shift scheduled" android:textColor="#E6FFFFFF" android:textSize="13sp" android:textStyle="bold" />
   </LinearLayout>
-  <ImageView android:layout_width="25dp" android:layout_height="25dp" android:layout_gravity="top|right" android:layout_marginTop="7dp" android:layout_marginRight="8dp" android:src="@drawable/wht_widget_logo" android:contentDescription="WHT" />
 </FrameLayout>
 XML
 
@@ -169,10 +172,10 @@ lines = [
     '<?xml version="1.0" encoding="utf-8"?>',
     '<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/calendar_widget_root" android:layout_width="match_parent" android:layout_height="match_parent">',
     '  <ImageView android:id="@+id/calendar_widget_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />',
+    '  <ImageView android:id="@+id/calendar_widget_logo" android:layout_width="130dp" android:layout_height="130dp" android:layout_gravity="center" android:alpha="0.06" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />',
     '  <LinearLayout android:id="@+id/calendar_widget_content" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="10dp">',
     '    <FrameLayout android:id="@+id/calendar_widget_header" android:layout_width="match_parent" android:layout_height="34dp">',
-    '      <TextView android:id="@+id/calendar_widget_title" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:paddingLeft="34dp" android:paddingRight="34dp" android:maxLines="1" android:text="September 2026" android:textColor="@color/wht_widget_text" android:textSize="17sp" android:textStyle="bold" />',
-    '      <ImageView android:id="@+id/calendar_widget_logo" android:layout_width="28dp" android:layout_height="28dp" android:layout_gravity="top|right" android:src="@drawable/wht_widget_logo" android:contentDescription="WHT" />',
+    '      <TextView android:id="@+id/calendar_widget_title" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:paddingLeft="12dp" android:paddingRight="12dp" android:maxLines="1" android:text="September 2026" android:textColor="@color/wht_widget_text" android:textSize="17sp" android:textStyle="bold" />',
     '    </FrameLayout>',
     '    <LinearLayout android:id="@+id/calendar_widget_weekdays" android:layout_width="match_parent" android:layout_height="18dp" android:orientation="horizontal">',
 ]
@@ -189,7 +192,17 @@ for row in range(6):
         preview = index + 1 if index < 30 else ""
         lines.append(f'        <TextView android:id="@+id/calendar_day_{index}" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="1dp" android:background="@drawable/wht_calendar_cell" android:gravity="center" android:maxLines="1" android:text="{preview}" android:textColor="@color/wht_widget_text" android:textSize="12sp" android:textStyle="bold" />')
     lines.append('      </LinearLayout>')
-lines.extend(['    </LinearLayout>', '  </LinearLayout>', '</FrameLayout>'])
+lines.extend([
+    '    </LinearLayout>',
+    '    <LinearLayout android:id="@+id/calendar_widget_legend" android:layout_width="match_parent" android:layout_height="21dp" android:gravity="center" android:orientation="horizontal" android:paddingTop="3dp">',
+    '      <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="horizontal"><TextView android:layout_width="wrap_content" android:layout_height="match_parent" android:gravity="center" android:text="●" android:textColor="#45D483" android:textSize="8sp"/><TextView android:id="@+id/calendar_legend_worked" android:layout_width="wrap_content" android:layout_height="match_parent" android:layout_marginLeft="2dp" android:gravity="center" android:maxLines="1" android:text="Worked" android:textColor="@color/wht_widget_text" android:textSize="8sp" android:textStyle="bold"/></LinearLayout>',
+    '      <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="horizontal"><TextView android:layout_width="wrap_content" android:layout_height="match_parent" android:gravity="center" android:text="●" android:textColor="#9A7BFF" android:textSize="8sp"/><TextView android:id="@+id/calendar_legend_scheduled" android:layout_width="wrap_content" android:layout_height="match_parent" android:layout_marginLeft="2dp" android:gravity="center" android:maxLines="1" android:text="Scheduled" android:textColor="@color/wht_widget_text" android:textSize="8sp" android:textStyle="bold"/></LinearLayout>',
+    '      <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="horizontal"><TextView android:layout_width="wrap_content" android:layout_height="match_parent" android:gravity="center" android:text="●" android:textColor="#E05264" android:textSize="8sp"/><TextView android:id="@+id/calendar_legend_progress" android:layout_width="wrap_content" android:layout_height="match_parent" android:layout_marginLeft="2dp" android:gravity="center" android:maxLines="1" android:text="In progress" android:textColor="@color/wht_widget_text" android:textSize="8sp" android:textStyle="bold"/></LinearLayout>',
+    '      <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="horizontal"><TextView android:layout_width="wrap_content" android:layout_height="match_parent" android:gravity="center" android:text="●" android:textColor="#F2BA54" android:textSize="8sp"/><TextView android:id="@+id/calendar_legend_break" android:layout_width="wrap_content" android:layout_height="match_parent" android:layout_marginLeft="2dp" android:gravity="center" android:maxLines="1" android:text="On break" android:textColor="@color/wht_widget_text" android:textSize="8sp" android:textStyle="bold"/></LinearLayout>',
+    '    </LinearLayout>',
+    '  </LinearLayout>',
+    '</FrameLayout>',
+])
 Path(sys.argv[1]).write_text("\n".join(lines) + "\n")
 PY
 
@@ -203,6 +216,9 @@ cat > "$RES_DIR/drawable/wht_calendar_cell_scheduled.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#359A7BFF"/><corners android:radius="8dp"/><stroke android:width="1dp" android:color="#809A7BFF"/></shape>
 XML
 cat > "$RES_DIR/drawable/wht_calendar_cell_active.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#35E05264"/><corners android:radius="8dp"/><stroke android:width="1dp" android:color="#90E05264"/></shape>
+XML
+cat > "$RES_DIR/drawable/wht_calendar_cell_break.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#35F2BA54"/><corners android:radius="8dp"/><stroke android:width="1dp" android:color="#90F2BA54"/></shape>
 XML
 cat > "$RES_DIR/drawable/wht_calendar_cell_today.xml" <<'XML'
@@ -215,6 +231,9 @@ cat > "$RES_DIR/drawable/wht_calendar_cell_scheduled_today.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#359A7BFF"/><corners android:radius="8dp"/><stroke android:width="2dp" android:color="#D0B7A5FF"/></shape>
 XML
 cat > "$RES_DIR/drawable/wht_calendar_cell_active_today.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#35E05264"/><corners android:radius="8dp"/><stroke android:width="2dp" android:color="#AE967FFF"/></shape>
+XML
+cat > "$RES_DIR/drawable/wht_calendar_cell_break_today.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#35F2BA54"/><corners android:radius="8dp"/><stroke android:width="2dp" android:color="#AE967FFF"/></shape>
 XML
 
@@ -273,7 +292,7 @@ cat > "$RES_DIR/xml/wht_shift_progress_widget_info.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?><appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:initialLayout="@layout/wht_shift_progress_widget" android:previewLayout="@layout/wht_shift_progress_widget" android:previewImage="@drawable/wht_shift_progress_preview" android:minWidth="180dp" android:minHeight="110dp" android:minResizeWidth="40dp" android:minResizeHeight="40dp" android:resizeMode="horizontal|vertical" android:targetCellWidth="3" android:targetCellHeight="2" android:updatePeriodMillis="1800000" android:widgetCategory="home_screen" />
 XML
 cat > "$RES_DIR/xml/wht_calendar_widget_info.xml" <<'XML'
-<?xml version="1.0" encoding="utf-8"?><appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:initialLayout="@layout/wht_calendar_widget" android:previewLayout="@layout/wht_calendar_widget" android:previewImage="@drawable/wht_calendar_preview" android:minWidth="250dp" android:minHeight="180dp" android:minResizeWidth="120dp" android:minResizeHeight="110dp" android:resizeMode="horizontal|vertical" android:targetCellWidth="4" android:targetCellHeight="3" android:updatePeriodMillis="1800000" android:widgetCategory="home_screen" />
+<?xml version="1.0" encoding="utf-8"?><appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:initialLayout="@layout/wht_calendar_widget" android:previewLayout="@layout/wht_calendar_widget" android:previewImage="@drawable/wht_calendar_preview" android:minWidth="250dp" android:minHeight="180dp" android:minResizeWidth="120dp" android:minResizeHeight="150dp" android:resizeMode="horizontal|vertical" android:targetCellWidth="4" android:targetCellHeight="3" android:updatePeriodMillis="1800000" android:widgetCategory="home_screen" />
 XML
 cat > "$JAVA_DIR/WhtWidgetStyle.java" <<'JAVA'
 package com.workedhourstracker.app;
@@ -544,20 +563,22 @@ package com.workedhourstracker.app;
 import android.app.*; import android.appwidget.*; import android.content.*; import android.graphics.*; import android.os.Bundle; import android.util.TypedValue; import android.view.View; import android.widget.RemoteViews; import org.json.JSONObject; import java.text.SimpleDateFormat; import java.util.*;
 public class CalendarWidgetProvider extends AppWidgetProvider {
  static final int[] WEEKDAY_IDS={R.id.calendar_weekday_0,R.id.calendar_weekday_1,R.id.calendar_weekday_2,R.id.calendar_weekday_3,R.id.calendar_weekday_4,R.id.calendar_weekday_5,R.id.calendar_weekday_6};
+ static final int[] LEGEND_IDS={R.id.calendar_legend_worked,R.id.calendar_legend_scheduled,R.id.calendar_legend_progress,R.id.calendar_legend_break};
  static final int[] DAY_IDS={R.id.calendar_day_0,R.id.calendar_day_1,R.id.calendar_day_2,R.id.calendar_day_3,R.id.calendar_day_4,R.id.calendar_day_5,R.id.calendar_day_6,R.id.calendar_day_7,R.id.calendar_day_8,R.id.calendar_day_9,R.id.calendar_day_10,R.id.calendar_day_11,R.id.calendar_day_12,R.id.calendar_day_13,R.id.calendar_day_14,R.id.calendar_day_15,R.id.calendar_day_16,R.id.calendar_day_17,R.id.calendar_day_18,R.id.calendar_day_19,R.id.calendar_day_20,R.id.calendar_day_21,R.id.calendar_day_22,R.id.calendar_day_23,R.id.calendar_day_24,R.id.calendar_day_25,R.id.calendar_day_26,R.id.calendar_day_27,R.id.calendar_day_28,R.id.calendar_day_29,R.id.calendar_day_30,R.id.calendar_day_31,R.id.calendar_day_32,R.id.calendar_day_33,R.id.calendar_day_34,R.id.calendar_day_35,R.id.calendar_day_36,R.id.calendar_day_37,R.id.calendar_day_38,R.id.calendar_day_39,R.id.calendar_day_40,R.id.calendar_day_41};
  public void onUpdate(Context c,AppWidgetManager m,int[] ids){JSONObject s=WhtWidgetStyle.state(c);for(int id:ids)m.updateAppWidget(id,view(c,s,m.getAppWidgetOptions(id)));}
  public void onAppWidgetOptionsChanged(Context c,AppWidgetManager m,int id,Bundle options){m.updateAppWidget(id,view(c,WhtWidgetStyle.state(c),options));}
  public static void refreshAll(Context c){AppWidgetManager m=AppWidgetManager.getInstance(c);JSONObject s=WhtWidgetStyle.state(c);for(int id:m.getAppWidgetIds(new ComponentName(c,CalendarWidgetProvider.class)))m.updateAppWidget(id,view(c,s,m.getAppWidgetOptions(id)));}
  static RemoteViews view(Context c,JSONObject s,Bundle options){
   int widthDp=Math.max(120,options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,250)),heightDp=Math.max(110,options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,180));boolean compact=widthDp<210||heightDp<155,large=widthDp>=300&&heightDp>=220,light="light".equals(s.optString("themeMode","dark"));float density=c.getResources().getDisplayMetrics().density;int imageWidth=Math.round(widthDp*density),imageHeight=Math.round(heightDp*density),text=light?Color.rgb(17,21,28):Color.WHITE,muted=light?Color.rgb(73,80,96):Color.rgb(208,213,226);
-  int horizontalPadding=Math.round((compact?6:10)*density),verticalPadding=Math.round((compact?5:9)*density);RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.wht_calendar_widget);v.setImageViewBitmap(R.id.calendar_widget_background,WhtWidgetStyle.background(s,imageWidth,imageHeight));v.setViewPadding(R.id.calendar_widget_content,horizontalPadding,verticalPadding,horizontalPadding,verticalPadding);v.setViewVisibility(R.id.calendar_widget_logo,compact&&widthDp<170?View.GONE:View.VISIBLE);
+  int horizontalPadding=Math.round((compact?6:10)*density),verticalPadding=Math.round((compact?5:9)*density);RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.wht_calendar_widget);v.setImageViewBitmap(R.id.calendar_widget_background,WhtWidgetStyle.background(s,imageWidth,imageHeight));v.setViewPadding(R.id.calendar_widget_content,horizontalPadding,verticalPadding,horizontalPadding,verticalPadding);v.setViewVisibility(R.id.calendar_widget_logo,View.VISIBLE);
   Calendar now=Calendar.getInstance(),first=(Calendar)now.clone();first.set(Calendar.DAY_OF_MONTH,1);String titlePattern=compact?"MMM yyyy":"MMMM yyyy";v.setTextViewText(R.id.calendar_widget_title,new SimpleDateFormat(titlePattern,Locale.getDefault()).format(first.getTime()));v.setTextColor(R.id.calendar_widget_title,text);size(v,R.id.calendar_widget_title,large?20f:compact?13f:17f);
   for(int id:WEEKDAY_IDS){v.setTextColor(id,muted);size(v,id,large?10f:compact?7f:9f);}
+  String[] legend=compact?new String[]{"Done","Plan","Active","Break"}:new String[]{"Worked","Scheduled","In progress","On break"};for(int i=0;i<LEGEND_IDS.length;i++){v.setTextViewText(LEGEND_IDS[i],legend[i]);v.setTextColor(LEGEND_IDS[i],muted);size(v,LEGEND_IDS[i],large?9f:compact?6f:8f);}
   JSONObject entries=s.optJSONObject("entries"),schedule=s.optJSONObject("scheduleEntries");SimpleDateFormat keyFormat=new SimpleDateFormat("yyyy-MM-dd",Locale.US);String today=keyFormat.format(now.getTime());int days=first.getActualMaximum(Calendar.DAY_OF_MONTH),leading=(first.get(Calendar.DAY_OF_WEEK)+5)%7;
   for(int slot=0;slot<DAY_IDS.length;slot++){
    int id=DAY_IDS[slot],day=slot-leading+1;size(v,id,large?15f:compact?9f:12f);v.setTextColor(id,text);
    if(day<1||day>days){v.setTextViewText(id,"");v.setViewVisibility(id,View.INVISIBLE);continue;}
-   v.setViewVisibility(id,View.VISIBLE);v.setTextViewText(id,String.valueOf(day));Calendar date=(Calendar)first.clone();date.set(Calendar.DAY_OF_MONTH,day);String key=keyFormat.format(date.getTime());JSONObject worked=entries==null?null:entries.optJSONObject(key),planned=schedule==null?null:schedule.optJSONObject(key);boolean completed=worked!=null&&!worked.optString("start","").isEmpty()&&!worked.optString("finish","").isEmpty(),active=worked!=null&&!worked.optString("start","").isEmpty()&&worked.optString("finish","").isEmpty(),scheduled=planned!=null&&!planned.optString("start","").isEmpty()&&!planned.optString("finish","").isEmpty(),isToday=key.equals(today);int background=completed?(isToday?R.drawable.wht_calendar_cell_worked_today:R.drawable.wht_calendar_cell_worked):active?(isToday?R.drawable.wht_calendar_cell_active_today:R.drawable.wht_calendar_cell_active):scheduled?(isToday?R.drawable.wht_calendar_cell_scheduled_today:R.drawable.wht_calendar_cell_scheduled):(isToday?R.drawable.wht_calendar_cell_today:R.drawable.wht_calendar_cell);v.setInt(id,"setBackgroundResource",background);
+   v.setViewVisibility(id,View.VISIBLE);v.setTextViewText(id,String.valueOf(day));Calendar date=(Calendar)first.clone();date.set(Calendar.DAY_OF_MONTH,day);String key=keyFormat.format(date.getTime());JSONObject worked=entries==null?null:entries.optJSONObject(key),planned=schedule==null?null:schedule.optJSONObject(key);boolean completed=worked!=null&&!worked.optString("start","").isEmpty()&&!worked.optString("finish","").isEmpty(),active=worked!=null&&!worked.optString("start","").isEmpty()&&worked.optString("finish","").isEmpty(),onBreak=active&&worked.optLong("breakStartedAt",0L)>0L,scheduled=planned!=null&&!planned.optString("start","").isEmpty()&&!planned.optString("finish","").isEmpty(),isToday=key.equals(today);int background=completed?(isToday?R.drawable.wht_calendar_cell_worked_today:R.drawable.wht_calendar_cell_worked):onBreak?(isToday?R.drawable.wht_calendar_cell_break_today:R.drawable.wht_calendar_cell_break):active?(isToday?R.drawable.wht_calendar_cell_active_today:R.drawable.wht_calendar_cell_active):scheduled?(isToday?R.drawable.wht_calendar_cell_scheduled_today:R.drawable.wht_calendar_cell_scheduled):(isToday?R.drawable.wht_calendar_cell_today:R.drawable.wht_calendar_cell);v.setInt(id,"setBackgroundResource",background);String destination=(completed||active)?"worked_date":scheduled?"schedule_date":"calendar";Intent dayIntent=new Intent(c,MainActivity.class).putExtra("wht_open_screen",destination).putExtra("wht_open_date",key).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);v.setOnClickPendingIntent(id,PendingIntent.getActivity(c,Math.abs(("calendar:"+key+":"+destination).hashCode()),dayIntent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));
   }
   Intent open=new Intent(c,MainActivity.class).putExtra("wht_open_screen","calendar").addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);v.setOnClickPendingIntent(R.id.calendar_widget_root,PendingIntent.getActivity(c,4800,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));return v;
  }

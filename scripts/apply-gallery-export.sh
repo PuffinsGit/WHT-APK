@@ -84,7 +84,9 @@ public class MainActivity extends BridgeActivity {
         if (intent == null) return;
         String destination = intent.getStringExtra("wht_open_screen");
         if (destination == null) return;
+        String requestedDate = intent.getStringExtra("wht_open_date");
         intent.removeExtra("wht_open_screen");
+        intent.removeExtra("wht_open_date");
         String javascript;
         if ("schedule".equals(destination)) {
             javascript = "if(typeof showScheduleScreen==='function'){if(typeof closeSidebar==='function')closeSidebar();showScheduleScreen();}";
@@ -94,6 +96,9 @@ public class MainActivity extends BridgeActivity {
             javascript = "if(typeof showHomeScreen==='function'){if(typeof closeSidebar==='function')closeSidebar();showHomeScreen();}";
         } else if ("calendar".equals(destination)) {
             javascript = "if(document.getElementById('calendarBtn')){if(typeof closeSidebar==='function')closeSidebar();if(typeof monday==='function')viewMonday=monday(new Date());document.getElementById('calendarBtn').click();}";
+        } else if (("worked_date".equals(destination) || "schedule_date".equals(destination)) && requestedDate != null && requestedDate.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            String target = "schedule_date".equals(destination) ? "schedule" : "work";
+            javascript = "if(typeof openTrackedDate==='function'){if(typeof closeSidebar==='function')closeSidebar();openTrackedDate('" + requestedDate + "','" + target + "');}";
         } else return;
         getBridge().getWebView().postDelayed(() -> getBridge().getWebView().evaluateJavascript(javascript, null), 900);
     }
