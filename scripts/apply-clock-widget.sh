@@ -160,11 +160,62 @@ cat > "$RES_DIR/layout/wht_shift_progress_widget.xml" <<'XML'
 </FrameLayout>
 XML
 
-cat > "$RES_DIR/layout/wht_calendar_widget.xml" <<'XML'
-<?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/calendar_widget_root" android:layout_width="match_parent" android:layout_height="match_parent">
-  <ImageView android:id="@+id/calendar_widget_image" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_calendar_preview" android:contentDescription="Work calendar" />
-</FrameLayout>
+python - "$RES_DIR/layout/wht_calendar_widget.xml" <<'PY'
+from pathlib import Path
+import sys
+
+weekdays = ("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
+lines = [
+    '<?xml version="1.0" encoding="utf-8"?>',
+    '<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/calendar_widget_root" android:layout_width="match_parent" android:layout_height="match_parent">',
+    '  <ImageView android:id="@+id/calendar_widget_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />',
+    '  <LinearLayout android:id="@+id/calendar_widget_content" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="10dp">',
+    '    <FrameLayout android:id="@+id/calendar_widget_header" android:layout_width="match_parent" android:layout_height="34dp">',
+    '      <TextView android:id="@+id/calendar_widget_title" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:paddingLeft="34dp" android:paddingRight="34dp" android:maxLines="1" android:text="September 2026" android:textColor="@color/wht_widget_text" android:textSize="17sp" android:textStyle="bold" />',
+    '      <ImageView android:id="@+id/calendar_widget_logo" android:layout_width="28dp" android:layout_height="28dp" android:layout_gravity="top|right" android:src="@drawable/wht_widget_logo" android:contentDescription="WHT" />',
+    '    </FrameLayout>',
+    '    <LinearLayout android:id="@+id/calendar_widget_weekdays" android:layout_width="match_parent" android:layout_height="18dp" android:orientation="horizontal">',
+]
+for index, label in enumerate(weekdays):
+    lines.append(f'      <TextView android:id="@+id/calendar_weekday_{index}" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="{label}" android:textColor="@color/wht_widget_text" android:textSize="9sp" android:textStyle="bold" />')
+lines.extend([
+    '    </LinearLayout>',
+    '    <LinearLayout android:id="@+id/calendar_widget_grid" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical">',
+])
+for row in range(6):
+    lines.append(f'      <LinearLayout android:id="@+id/calendar_week_{row}" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">')
+    for column in range(7):
+        index = row * 7 + column
+        preview = index + 1 if index < 30 else ""
+        lines.append(f'        <TextView android:id="@+id/calendar_day_{index}" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="1dp" android:background="@drawable/wht_calendar_cell" android:gravity="center" android:maxLines="1" android:text="{preview}" android:textColor="@color/wht_widget_text" android:textSize="12sp" android:textStyle="bold" />')
+    lines.append('      </LinearLayout>')
+lines.extend(['    </LinearLayout>', '  </LinearLayout>', '</FrameLayout>'])
+Path(sys.argv[1]).write_text("\n".join(lines) + "\n")
+PY
+
+cat > "$RES_DIR/drawable/wht_calendar_cell.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#1711151C"/><corners android:radius="8dp"/><stroke android:width="1dp" android:color="#18FFFFFF"/></shape>
+XML
+cat > "$RES_DIR/drawable/wht_calendar_cell_worked.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#3545D483"/><corners android:radius="8dp"/><stroke android:width="1dp" android:color="#8045D483"/></shape>
+XML
+cat > "$RES_DIR/drawable/wht_calendar_cell_scheduled.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#359A7BFF"/><corners android:radius="8dp"/><stroke android:width="1dp" android:color="#809A7BFF"/></shape>
+XML
+cat > "$RES_DIR/drawable/wht_calendar_cell_active.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#35F2BA54"/><corners android:radius="8dp"/><stroke android:width="1dp" android:color="#90F2BA54"/></shape>
+XML
+cat > "$RES_DIR/drawable/wht_calendar_cell_today.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#2011151C"/><corners android:radius="8dp"/><stroke android:width="2dp" android:color="#AE967FFF"/></shape>
+XML
+cat > "$RES_DIR/drawable/wht_calendar_cell_worked_today.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#3545D483"/><corners android:radius="8dp"/><stroke android:width="2dp" android:color="#AE967FFF"/></shape>
+XML
+cat > "$RES_DIR/drawable/wht_calendar_cell_scheduled_today.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#359A7BFF"/><corners android:radius="8dp"/><stroke android:width="2dp" android:color="#D0B7A5FF"/></shape>
+XML
+cat > "$RES_DIR/drawable/wht_calendar_cell_active_today.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?><shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#35F2BA54"/><corners android:radius="8dp"/><stroke android:width="2dp" android:color="#AE967FFF"/></shape>
 XML
 
 cat > "$RES_DIR/drawable/wht_widget_background.xml" <<'XML'
@@ -232,7 +283,8 @@ final class WhtWidgetStyle {
  static JSONObject state(Context c){try{JSONObject s=new JSONObject(c.getSharedPreferences(PREFS,0).getString(DATA,"{}"));int night=c.getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK;s.put("themeMode",night==android.content.res.Configuration.UI_MODE_NIGHT_YES?"dark":"light");return s;}catch(Exception e){return new JSONObject();}}
  static int[] palette(JSONObject s){boolean light="light".equals(s.optString("themeMode","dark"));String raw=s.optString(light?"lightBackground":"darkBackground",light?"linear-gradient(145deg, #dcecff, #ffdff3)":"linear-gradient(145deg, #11182a, #4a3670)");String lower=raw.toLowerCase(java.util.Locale.US);if(lower.contains("wht-background-light"))return new int[]{Color.rgb(249,250,255),Color.rgb(219,211,251)};if(lower.contains("wht-background-dark"))return new int[]{Color.rgb(7,10,20),Color.rgb(53,35,103)};java.util.regex.Matcher m=java.util.regex.Pattern.compile("#[0-9a-fA-F]{6}").matcher(raw);int first=light?Color.rgb(220,236,255):Color.rgb(17,24,42),last=light?Color.rgb(255,223,243):Color.rgb(74,54,112);if(m.find())try{first=Color.parseColor(m.group());}catch(Exception ignored){}while(m.find())try{last=Color.parseColor(m.group());}catch(Exception ignored){}return new int[]{first,last};}
  static int paletteLevel(JSONObject s){boolean light="light".equals(s.optString("themeMode","dark"));String raw=s.optString(light?"lightBackground":"darkBackground","").toLowerCase(java.util.Locale.US);if(raw.contains("wht-background-"))return 2;if(raw.contains(light?"#d9f1ff":"#08202f"))return 1;if(raw.contains(light?"#eee5ff":"#1c102e"))return 2;if(raw.contains(light?"#dff8ef":"#12161d"))return 3;return 0;}
- static Bitmap background(JSONObject s){int[] colors=palette(s);Bitmap x=Bitmap.createBitmap(600,110,Bitmap.Config.ARGB_8888);Paint p=new Paint(1);p.setShader(new LinearGradient(0,0,600,110,colors[0],colors[1],Shader.TileMode.CLAMP));new Canvas(x).drawRoundRect(0,0,600,110,24,24,p);return x;}
+ static Bitmap background(JSONObject s){return background(s,600,110);}
+ static Bitmap background(JSONObject s,int width,int height){int[] colors=palette(s);width=Math.max(120,Math.min(1200,width));height=Math.max(80,Math.min(900,height));Bitmap x=Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);Paint p=new Paint(1);p.setShader(new LinearGradient(0,0,width,height,colors[0],colors[1],Shader.TileMode.CLAMP));float radius=Math.max(18f,Math.min(width,height)*.10f);new Canvas(x).drawRoundRect(0,0,width,height,radius,radius,p);return x;}
  static int blend(int a,int b,float n){return Color.rgb(Math.round(Color.red(a)+(Color.red(b)-Color.red(a))*n),Math.round(Color.green(a)+(Color.green(b)-Color.green(a))*n),Math.round(Color.blue(a)+(Color.blue(b)-Color.blue(a))*n));}
 }
 JAVA
@@ -489,27 +541,27 @@ JAVA
 
 cat > "$JAVA_DIR/CalendarWidgetProvider.java" <<'JAVA'
 package com.workedhourstracker.app;
-import android.app.*; import android.appwidget.*; import android.content.*; import android.graphics.*; import android.os.Bundle; import android.widget.RemoteViews; import org.json.JSONObject; import java.text.SimpleDateFormat; import java.util.*;
+import android.app.*; import android.appwidget.*; import android.content.*; import android.graphics.*; import android.os.Bundle; import android.util.TypedValue; import android.view.View; import android.widget.RemoteViews; import org.json.JSONObject; import java.text.SimpleDateFormat; import java.util.*;
 public class CalendarWidgetProvider extends AppWidgetProvider {
+ static final int[] WEEKDAY_IDS={R.id.calendar_weekday_0,R.id.calendar_weekday_1,R.id.calendar_weekday_2,R.id.calendar_weekday_3,R.id.calendar_weekday_4,R.id.calendar_weekday_5,R.id.calendar_weekday_6};
+ static final int[] DAY_IDS={R.id.calendar_day_0,R.id.calendar_day_1,R.id.calendar_day_2,R.id.calendar_day_3,R.id.calendar_day_4,R.id.calendar_day_5,R.id.calendar_day_6,R.id.calendar_day_7,R.id.calendar_day_8,R.id.calendar_day_9,R.id.calendar_day_10,R.id.calendar_day_11,R.id.calendar_day_12,R.id.calendar_day_13,R.id.calendar_day_14,R.id.calendar_day_15,R.id.calendar_day_16,R.id.calendar_day_17,R.id.calendar_day_18,R.id.calendar_day_19,R.id.calendar_day_20,R.id.calendar_day_21,R.id.calendar_day_22,R.id.calendar_day_23,R.id.calendar_day_24,R.id.calendar_day_25,R.id.calendar_day_26,R.id.calendar_day_27,R.id.calendar_day_28,R.id.calendar_day_29,R.id.calendar_day_30,R.id.calendar_day_31,R.id.calendar_day_32,R.id.calendar_day_33,R.id.calendar_day_34,R.id.calendar_day_35,R.id.calendar_day_36,R.id.calendar_day_37,R.id.calendar_day_38,R.id.calendar_day_39,R.id.calendar_day_40,R.id.calendar_day_41};
  public void onUpdate(Context c,AppWidgetManager m,int[] ids){JSONObject s=WhtWidgetStyle.state(c);for(int id:ids)m.updateAppWidget(id,view(c,s,m.getAppWidgetOptions(id)));}
  public void onAppWidgetOptionsChanged(Context c,AppWidgetManager m,int id,Bundle options){m.updateAppWidget(id,view(c,WhtWidgetStyle.state(c),options));}
  public static void refreshAll(Context c){AppWidgetManager m=AppWidgetManager.getInstance(c);JSONObject s=WhtWidgetStyle.state(c);for(int id:m.getAppWidgetIds(new ComponentName(c,CalendarWidgetProvider.class)))m.updateAppWidget(id,view(c,s,m.getAppWidgetOptions(id)));}
- static RemoteViews view(Context c,JSONObject s,Bundle options){int width=Math.max(360,Math.min(560,options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,250)*2));int height=Math.max(270,Math.min(420,options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,180)*2));RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.wht_calendar_widget);v.setImageViewBitmap(R.id.calendar_widget_image,render(c,s,width,height));Intent open=new Intent(c,MainActivity.class).putExtra("wht_open_screen","calendar").addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);v.setOnClickPendingIntent(R.id.calendar_widget_root,PendingIntent.getActivity(c,4800,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));return v;}
- static Bitmap render(Context context,JSONObject state,int width,int height){
-  Bitmap image=Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);Canvas canvas=new Canvas(image);Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);boolean light="light".equals(state.optString("themeMode","dark"));int text=light?Color.rgb(17,21,28):Color.WHITE,muted=light?Color.rgb(70,79,96):Color.rgb(190,198,216);int[] colors=WhtWidgetStyle.palette(state);paint.setShader(new LinearGradient(0,0,width,height,colors[0],colors[1],Shader.TileMode.CLAMP));canvas.drawRoundRect(3,3,width-3,height-3,30,30,paint);paint.setShader(null);
-  float scale=Math.min(width/520f,height/390f);Calendar now=Calendar.getInstance(),first=(Calendar)now.clone();first.set(Calendar.DAY_OF_MONTH,1);int year=now.get(Calendar.YEAR),month=now.get(Calendar.MONTH),days=first.getActualMaximum(Calendar.DAY_OF_MONTH),leading=(first.get(Calendar.DAY_OF_WEEK)+5)%7;String monthTitle=new SimpleDateFormat("MMMM yyyy",Locale.getDefault()).format(first.getTime());
-  paint.setColor(text);paint.setTypeface(Typeface.create(Typeface.DEFAULT,Typeface.BOLD));paint.setTextSize(Math.max(18f,27f*scale));paint.setTextAlign(Paint.Align.CENTER);canvas.drawText(monthTitle,width/2f,Math.max(30f,38f*scale),paint);
-  try{Bitmap logo=BitmapFactory.decodeResource(context.getResources(),R.drawable.wht_widget_logo);if(logo!=null){float size=Math.max(27f,38f*scale);canvas.drawBitmap(logo,null,new RectF(width-size-12f*scale,10f*scale,width-12f*scale,10f*scale+size),paint);}}catch(Exception ignored){}
-  String[] labels={"MON","TUE","WED","THU","FRI","SAT","SUN"};float left=20f*scale,right=20f*scale,headerY=Math.max(57f,66f*scale),gridTop=Math.max(70f,80f*scale),cellWidth=(width-left-right)/7f,cellHeight=(height-gridTop-15f*scale)/6f;paint.setTextSize(Math.max(9f,12f*scale));paint.setColor(muted);for(int i=0;i<7;i++)canvas.drawText(labels[i],left+cellWidth*(i+.5f),headerY,paint);
-  JSONObject entries=state.optJSONObject("entries"),schedule=state.optJSONObject("scheduleEntries");SimpleDateFormat keyFormat=new SimpleDateFormat("yyyy-MM-dd",Locale.US);String today=keyFormat.format(now.getTime());
-  for(int day=1;day<=days;day++){
-   int slot=leading+day-1,row=slot/7,col=slot%7;Calendar date=(Calendar)first.clone();date.set(Calendar.DAY_OF_MONTH,day);String key=keyFormat.format(date.getTime());JSONObject worked=entries==null?null:entries.optJSONObject(key),planned=schedule==null?null:schedule.optJSONObject(key);boolean completed=worked!=null&&!worked.optString("start","").isEmpty()&&!worked.optString("finish","").isEmpty(),active=worked!=null&&!worked.optString("start","").isEmpty()&&worked.optString("finish","").isEmpty(),scheduled=planned!=null&&!planned.optString("start","").isEmpty()&&!planned.optString("finish","").isEmpty();float x0=left+col*cellWidth+3f*scale,y0=gridTop+row*cellHeight+3f*scale,x1=left+(col+1)*cellWidth-3f*scale,y1=gridTop+(row+1)*cellHeight-3f*scale;
-   paint.setStyle(Paint.Style.FILL);paint.setColor(light?0x2211151C:0x25151B28);if(completed)paint.setColor(light?0x3345D483:0x3D45D483);else if(active)paint.setColor(light?0x33F2BA54:0x3DF2BA54);else if(scheduled)paint.setColor(light?0x339A7BFF:0x3D9A7BFF);canvas.drawRoundRect(x0,y0,x1,y1,Math.max(6f,9f*scale),Math.max(6f,9f*scale),paint);
-   int statusColor=completed?Color.rgb(69,212,131):active?Color.rgb(242,186,84):scheduled?Color.rgb(154,123,255):muted;if(completed||active||scheduled){paint.setColor(statusColor);canvas.drawCircle((x0+x1)/2f,y1-Math.max(4f,6f*scale),Math.max(2f,2.6f*scale),paint);}if(key.equals(today)){paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(Math.max(2f,2.4f*scale));paint.setColor(light?Color.rgb(90,70,205):Color.rgb(174,150,255));canvas.drawRoundRect(x0,y0,x1,y1,Math.max(6f,9f*scale),Math.max(6f,9f*scale),paint);paint.setStyle(Paint.Style.FILL);}
-   paint.setColor(text);paint.setTextSize(Math.max(11f,15f*scale));paint.setTypeface(Typeface.create(Typeface.DEFAULT,Typeface.BOLD));Paint.FontMetrics metrics=paint.getFontMetrics();float baseline=(y0+y1)/2f-(metrics.ascent+metrics.descent)/2f-(completed||active||scheduled?2f*scale:0);canvas.drawText(String.valueOf(day),(x0+x1)/2f,baseline,paint);
+ static RemoteViews view(Context c,JSONObject s,Bundle options){
+  int widthDp=Math.max(120,options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,250)),heightDp=Math.max(110,options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,180));boolean compact=widthDp<210||heightDp<155,large=widthDp>=300&&heightDp>=220,light="light".equals(s.optString("themeMode","dark"));float density=c.getResources().getDisplayMetrics().density;int imageWidth=Math.round(widthDp*density),imageHeight=Math.round(heightDp*density),text=light?Color.rgb(17,21,28):Color.WHITE,muted=light?Color.rgb(73,80,96):Color.rgb(208,213,226);
+  int horizontalPadding=Math.round((compact?6:10)*density),verticalPadding=Math.round((compact?5:9)*density);RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.wht_calendar_widget);v.setImageViewBitmap(R.id.calendar_widget_background,WhtWidgetStyle.background(s,imageWidth,imageHeight));v.setViewPadding(R.id.calendar_widget_content,horizontalPadding,verticalPadding,horizontalPadding,verticalPadding);v.setViewVisibility(R.id.calendar_widget_logo,compact&&widthDp<170?View.GONE:View.VISIBLE);
+  Calendar now=Calendar.getInstance(),first=(Calendar)now.clone();first.set(Calendar.DAY_OF_MONTH,1);String titlePattern=compact?"MMM yyyy":"MMMM yyyy";v.setTextViewText(R.id.calendar_widget_title,new SimpleDateFormat(titlePattern,Locale.getDefault()).format(first.getTime()));v.setTextColor(R.id.calendar_widget_title,text);size(v,R.id.calendar_widget_title,large?20f:compact?13f:17f);
+  for(int id:WEEKDAY_IDS){v.setTextColor(id,muted);size(v,id,large?10f:compact?7f:9f);}
+  JSONObject entries=s.optJSONObject("entries"),schedule=s.optJSONObject("scheduleEntries");SimpleDateFormat keyFormat=new SimpleDateFormat("yyyy-MM-dd",Locale.US);String today=keyFormat.format(now.getTime());int days=first.getActualMaximum(Calendar.DAY_OF_MONTH),leading=(first.get(Calendar.DAY_OF_WEEK)+5)%7;
+  for(int slot=0;slot<DAY_IDS.length;slot++){
+   int id=DAY_IDS[slot],day=slot-leading+1;size(v,id,large?15f:compact?9f:12f);v.setTextColor(id,text);
+   if(day<1||day>days){v.setTextViewText(id,"");v.setViewVisibility(id,View.INVISIBLE);continue;}
+   v.setViewVisibility(id,View.VISIBLE);v.setTextViewText(id,String.valueOf(day));Calendar date=(Calendar)first.clone();date.set(Calendar.DAY_OF_MONTH,day);String key=keyFormat.format(date.getTime());JSONObject worked=entries==null?null:entries.optJSONObject(key),planned=schedule==null?null:schedule.optJSONObject(key);boolean completed=worked!=null&&!worked.optString("start","").isEmpty()&&!worked.optString("finish","").isEmpty(),active=worked!=null&&!worked.optString("start","").isEmpty()&&worked.optString("finish","").isEmpty(),scheduled=planned!=null&&!planned.optString("start","").isEmpty()&&!planned.optString("finish","").isEmpty(),isToday=key.equals(today);int background=completed?(isToday?R.drawable.wht_calendar_cell_worked_today:R.drawable.wht_calendar_cell_worked):active?(isToday?R.drawable.wht_calendar_cell_active_today:R.drawable.wht_calendar_cell_active):scheduled?(isToday?R.drawable.wht_calendar_cell_scheduled_today:R.drawable.wht_calendar_cell_scheduled):(isToday?R.drawable.wht_calendar_cell_today:R.drawable.wht_calendar_cell);v.setInt(id,"setBackgroundResource",background);
   }
-  return image;
+  Intent open=new Intent(c,MainActivity.class).putExtra("wht_open_screen","calendar").addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);v.setOnClickPendingIntent(R.id.calendar_widget_root,PendingIntent.getActivity(c,4800,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));return v;
  }
+ static void size(RemoteViews views,int id,float sp){views.setTextViewTextSize(id,TypedValue.COMPLEX_UNIT_SP,sp);}
  public void onReceive(Context c,Intent i){super.onReceive(c,i);if(Intent.ACTION_CONFIGURATION_CHANGED.equals(i.getAction()))refreshAll(c);}
 }
 JAVA
