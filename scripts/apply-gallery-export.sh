@@ -113,6 +113,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.DocumentsContract;
+import android.provider.ContactsContract;
 import android.util.Base64;
 
 import com.getcapacitor.JSObject;
@@ -147,6 +148,45 @@ public class GallerySaverPlugin extends Plugin {
     private static final String WIDGET_DATA = "app_data";
     private static final String SAVE_NAME = "wht-save.json";
     private static final String BACKUP_TREE_URI = "backup_tree_uri";
+
+    @PluginMethod
+    public void pickContact(PluginCall call) {
+        try {
+            Intent picker = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
+            startActivityForResult(call, picker, "contactPicked");
+        } catch (Exception error) {
+            call.reject("Could not open the device contact picker: " + error.getMessage(), error);
+        }
+    }
+
+    @ActivityCallback
+    private void contactPicked(PluginCall call, ActivityResult activityResult) {
+        if (call == null) return;
+        Intent intent = activityResult.getData();
+        if (activityResult.getResultCode() != Activity.RESULT_OK || intent == null || intent.getData() == null) {
+            JSObject result = new JSObject();
+            result.put("cancelled", true);
+            call.resolve(result);
+            return;
+        }
+        Uri contactUri = intent.getData();
+        String[] projection = {
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+            ContactsContract.CommonDataKinds.Phone.NUMBER
+        };
+        try (Cursor cursor = getContext().getContentResolver().query(contactUri, projection, null, null, null)) {
+            if (cursor == null || !cursor.moveToFirst()) {
+                call.reject("The selected contact could not be read.");
+                return;
+            }
+            JSObject result = new JSObject();
+            result.put("label", cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)));
+            result.put("number", cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER)));
+            call.resolve(result);
+        } catch (Exception error) {
+            call.reject("Could not read the selected contact: " + error.getMessage(), error);
+        }
+    }
 
     @PluginMethod
     public void playClockTone(PluginCall call) {
