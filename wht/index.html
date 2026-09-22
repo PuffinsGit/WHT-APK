@@ -309,6 +309,23 @@
       .home-schedule-status.unworked { color:var(--purple2); }
       .home-schedule-status.empty { color:var(--muted); }
       .home-schedule-time { margin-top:4px; color:var(--muted); font-size:10px; line-height:1.35; }
+      .home-calendar-body { cursor:pointer; }
+      .home-calendar-month { margin-bottom:12px; color:var(--text); font-size:15px; font-weight:900; text-align:center; }
+      .home-calendar-weekdays, .home-calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; }
+      .home-calendar-weekdays { margin-bottom:6px; }
+      .home-calendar-weekdays span { color:var(--muted); font-size:9px; font-weight:900; text-align:center; text-transform:uppercase; }
+      .home-calendar-day { position:relative; min-height:38px; display:grid; place-items:center; border:1px solid var(--line); border-radius:10px; background:var(--panel2); color:var(--muted); font-size:11px; font-weight:800; }
+      .home-calendar-day.blank { visibility:hidden; }
+      .home-calendar-day.worked { border-color:rgba(69,212,131,.42); background:rgba(69,212,131,.13); color:var(--text); }
+      .home-calendar-day.scheduled { border-color:rgba(154,123,255,.42); background:rgba(154,123,255,.12); color:var(--text); }
+      .home-calendar-day.active { border-color:rgba(242,186,84,.50); background:rgba(242,186,84,.13); color:var(--text); }
+      .home-calendar-day.today { box-shadow:inset 0 0 0 2px var(--purple); }
+      .home-calendar-dot { position:absolute; bottom:5px; width:4px; height:4px; border-radius:50%; background:currentColor; }
+      .home-calendar-legend { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:12px; color:var(--muted); font-size:9px; font-weight:800; }
+      .home-calendar-legend span::before { content:""; display:inline-block; width:7px; height:7px; margin-right:5px; border-radius:50%; background:currentColor; }
+      .home-calendar-legend .worked { color:#45d483; }
+      .home-calendar-legend .scheduled { color:var(--purple2); }
+      .home-calendar-legend .active { color:#f2ba54; }
       .home-widget-empty { color:var(--muted); font-size:13px; line-height:1.5; }
       .home-widget-add {
         min-height:112px;
@@ -1729,7 +1746,7 @@
       <div id="sidebarTools"></div>
       <div id="scheduleActionsSlot" hidden></div>
       <div class="sidebar-footer">
-        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.25</span></div>
+        <div class="sidebar-copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.26</span></div>
         <div class="sidebar-footer-actions">
           <button type="button" class="sidebar-settings-button" id="sidebarSettingsBtn" aria-label="Open settings" title="Settings">⚙</button>
         </div>
@@ -1847,7 +1864,7 @@
       <div class="note" id="workNote">
         Your entries are saved automatically to this device. A backup copy is also kept in Documents/WHT so it can survive an app reinstall.
       </div>
-      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.25</span></footer>
+      <footer class="copyright">© 2026 Mark Breddy · Puffins<span class="app-version">WorkedHoursTracker (WHT) ALPHA v1.26</span></footer>
     </div>
 
     <div class="modalback" id="modalBack">
@@ -1935,7 +1952,7 @@
       function normaliseState(target) {
         target.entries = target.entries || {};
         target.scheduleEntries = target.scheduleEntries || {};
-        const allowedHomeWidgets = ["clock", "today", "shift_progress", "weekly", "schedule_grid", "upcoming", "phone", "shortcuts"];
+        const allowedHomeWidgets = ["clock", "today", "shift_progress", "weekly", "schedule_grid", "calendar", "upcoming", "phone", "shortcuts"];
         target.homeWidgets = Array.isArray(target.homeWidgets)
           ? [...new Set(target.homeWidgets.filter((widget) => allowedHomeWidgets.includes(widget)))]
           : [];
@@ -2309,6 +2326,7 @@
         shift_progress: { title: "Shift Progress", description: "Follow today's shift completion percentage." },
         weekly: { title: "Weekly Overview", description: "View this week's worked hours and gross pay." },
         schedule_grid: { title: "Weekly Schedule", description: "See worked, unworked and unscheduled days in a weekly grid." },
+        calendar: { title: "Calendar", description: "View this month's worked and scheduled days, then open the full calendar." },
         upcoming: { title: "Upcoming Shifts", description: "See your next three scheduled shifts." },
         phone: { title: "Quick Dial", description: "Save a phone number for one-tap access to your Phone app." },
         shortcuts: { title: "Quick Access", description: "Open your most-used WHT pages quickly." },
@@ -2412,6 +2430,29 @@
           }
           return `<article class="home-widget"><div class="home-widget-head"><div class="home-widget-title">Weekly Schedule</div>${controls}</div><div class="home-schedule-grid">${days.join("")}</div></article>`;
         }
+        if (type === "calendar") {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const firstDay = new Date(year, month, 1);
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          const leading = (firstDay.getDay() + 6) % 7;
+          const cells = Array.from({ length:leading }, () => `<span class="home-calendar-day blank" aria-hidden="true"></span>`);
+          for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const key = iso(date);
+            const worked = state.entries[key] || {};
+            const scheduled = state.scheduleEntries[key] || {};
+            const completed = Boolean(worked.start && worked.finish);
+            const active = Boolean(worked.start && !worked.finish);
+            const planned = Boolean(scheduled.start && scheduled.finish);
+            const statusClass = completed ? "worked" : active ? "active" : planned ? "scheduled" : "";
+            const todayClass = iso(date) === iso(now) ? " today" : "";
+            const description = completed ? "Worked" : active ? "In progress" : planned ? "Scheduled" : "No shift";
+            cells.push(`<span class="home-calendar-day ${statusClass}${todayClass}" aria-label="${escapeHTML(date.toLocaleDateString("en-AU", { day:"numeric", month:"long" }))}: ${description}">${day}${statusClass ? `<i class="home-calendar-dot" aria-hidden="true"></i>` : ""}</span>`);
+          }
+          return `<article class="home-widget"><div class="home-widget-head"><div class="home-widget-title">Calendar</div>${controls}</div><div class="home-calendar-body" data-home-calendar role="button" tabindex="0" aria-label="Open full work calendar"><div class="home-calendar-month">${escapeHTML(now.toLocaleDateString("en-AU", { month:"long", year:"numeric" }))}</div><div class="home-calendar-weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div><div class="home-calendar-grid">${cells.join("")}</div><div class="home-calendar-legend"><span class="worked">Worked</span><span class="scheduled">Scheduled</span><span class="active">In Progress</span></div></div></article>`;
+        }
         if (type === "upcoming") {
           const shifts = [];
           const cursor = new Date();
@@ -2477,6 +2518,16 @@
           if (button.dataset.homePage === "schedule") showScheduleScreen();
           else if (button.dataset.homePage === "calendar") document.getElementById("calendarBtn").click();
           else showWorkScreen();
+        });
+        list.querySelectorAll("[data-home-calendar]").forEach((calendar) => {
+          const openCalendar = () => document.getElementById("calendarBtn").click();
+          calendar.onclick = openCalendar;
+          calendar.onkeydown = (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              openCalendar();
+            }
+          };
         });
         refreshHomeShiftProgress();
       }
@@ -3150,7 +3201,7 @@
         context.textAlign = "right";
         context.fillText("© 2026 Mark Breddy · Puffins", 1330, y);
         context.font = "500 14px system-ui,sans-serif";
-        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.25", 1330, y + 20);
+        context.fillText("WorkedHoursTracker (WHT) ALPHA v1.26", 1330, y + 20);
         context.restore();
       }
       function drawPaydayMarker(context, row, x, y) {
@@ -3367,7 +3418,7 @@
             "",
           );
         });
-        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.25");
+        lines.push("", `Total Hours: ${hoursMinutesLabel(totalHours)}`, `Estimated Gross Pay: ${money(totalPay)}`, exportAsOfLabel(), "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.26");
         return lines.join("\n");
       }
       async function saveTxtDocument(content, fileName, exportType = "worked") {
@@ -3985,7 +4036,7 @@
             "",
           );
         });
-        lines.push("", `Total Shift Hours: ${hoursMinutesLabel(totalHours)}`, `Combined Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.25");
+        lines.push("", `Total Shift Hours: ${hoursMinutesLabel(totalHours)}`, `Combined Gross Pay: ${money(totalPay)}`, "", "© 2026 Mark Breddy · Puffins", "WorkedHoursTracker (WHT) ALPHA v1.26");
         return lines.join("\n");
       }
 
@@ -4313,7 +4364,7 @@
           toast("Please enter a title and description");
           return;
         }
-        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.25`;
+        const body = `Title: ${title}\n\nDescription:\n${description}\n\nApp version: WorkedHoursTracker (WHT) ALPHA v1.26`;
         window.location.href = `mailto:${REPORT_ISSUE_EMAIL}?subject=${encodeURIComponent(REPORT_ISSUE_SUBJECT)}&body=${encodeURIComponent(body)}`;
         returnFromIssueReport();
       }
