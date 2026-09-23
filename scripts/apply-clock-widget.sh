@@ -42,7 +42,7 @@ centered("12:30 pm – 5:00 pm", 315, time_font, "white")
 
 logo = Image.open("wht/header-logo.png").convert("RGBA")
 logo.thumbnail((120, 120), Image.Resampling.LANCZOS)
-logo.putalpha(18)
+logo.putalpha(10)
 canvas.alpha_composite(logo, ((size - logo.width) // 2, (size - logo.height) // 2))
 canvas.save("android/app/src/main/res/drawable-nodpi/wht_shift_progress_preview.png")
 
@@ -86,7 +86,7 @@ for day in range(1, 31):
     cal.text((x0 + (60 - (box[2] - box[0])) / 2, y0 + 9), value, font=cal_day, fill="white")
 logo = Image.open("wht/header-logo.png").convert("RGBA")
 logo.thumbnail((150, 150), Image.Resampling.LANCZOS)
-logo.putalpha(18)
+logo.putalpha(10)
 calendar_preview.alpha_composite(logo, ((520 - logo.width) // 2, (390 - logo.height) // 2))
 calendar_preview.save("android/app/src/main/res/drawable-nodpi/wht_calendar_preview.png")
 PY
@@ -95,7 +95,7 @@ cat > "$RES_DIR/layout/wht_clock_widget.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:theme="@android:style/Theme.DeviceDefault.DayNight">
   <ImageView android:id="@+id/widget_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />
-  <ImageView android:layout_width="92dp" android:layout_height="92dp" android:layout_gravity="center" android:alpha="0.06" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />
+  <ImageView android:layout_width="92dp" android:layout_height="92dp" android:layout_gravity="center" android:alpha="0.035" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />
   <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="8dp">
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:paddingBottom="4dp">
       <TextView android:id="@+id/widget_clock_in" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:gravity="center" android:background="@drawable/wht_widget_clock_in" android:text="Clock In" android:textColor="@color/wht_widget_text" android:textSize="15sp" android:textStyle="bold" />
@@ -114,7 +114,7 @@ cat > "$RES_DIR/layout/wht_quick_dial_widget.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/quick_dial_root" android:layout_width="match_parent" android:layout_height="match_parent">
   <ImageView android:id="@+id/quick_dial_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />
-  <ImageView android:layout_width="92dp" android:layout_height="92dp" android:layout_gravity="center" android:alpha="0.06" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />
+  <ImageView android:layout_width="92dp" android:layout_height="92dp" android:layout_gravity="center" android:alpha="0.035" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />
   <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:paddingLeft="10dp" android:paddingTop="6dp" android:paddingRight="10dp" android:paddingBottom="6dp">
     <TextView android:id="@+id/quick_dial_title" android:layout_width="match_parent" android:layout_height="24dp" android:gravity="center" android:paddingLeft="34dp" android:paddingRight="34dp" android:text="Quick Dial" android:textColor="@color/wht_widget_text" android:textSize="15sp" android:textStyle="bold" />
     <TextView android:id="@+id/quick_dial_one" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="3dp" android:gravity="center" android:background="@drawable/wht_widget_quick_dial_button" android:maxLines="1" android:text="Contact 1" android:textColor="@color/wht_widget_text" android:textSize="13sp" android:textStyle="bold" />
@@ -129,7 +129,7 @@ cat > "$RES_DIR/layout/wht_next_shift_widget.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/next_shift_root" android:layout_width="match_parent" android:layout_height="match_parent">
   <ImageView android:id="@+id/next_shift_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />
-  <ImageView android:layout_width="92dp" android:layout_height="92dp" android:layout_gravity="center" android:alpha="0.06" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />
+  <ImageView android:layout_width="92dp" android:layout_height="92dp" android:layout_gravity="center" android:alpha="0.035" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />
   <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:paddingLeft="12dp" android:paddingTop="5dp" android:paddingRight="12dp" android:paddingBottom="6dp">
     <TextView android:id="@+id/next_shift_title" android:layout_width="match_parent" android:layout_height="23dp" android:gravity="center" android:paddingLeft="38dp" android:paddingRight="38dp" android:text="Upcoming Shifts" android:textAlignment="center" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" />
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
@@ -154,7 +154,7 @@ cat > "$RES_DIR/layout/wht_shift_progress_widget.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/progress_widget_root" android:layout_width="match_parent" android:layout_height="match_parent">
   <ImageView android:id="@+id/progress_widget_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />
-  <ImageView android:layout_width="108dp" android:layout_height="108dp" android:layout_gravity="center" android:alpha="0.06" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />
+  <ImageView android:layout_width="108dp" android:layout_height="108dp" android:layout_gravity="center" android:alpha="0.035" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />
   <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical" android:padding="10dp">
     <TextView android:id="@+id/progress_widget_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="Today's Shift" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" />
     <ImageView android:id="@+id/progress_ring" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:adjustViewBounds="true" android:scaleType="centerInside" android:src="@drawable/wht_progress_ring_preview" android:contentDescription="Shift completion" />
@@ -172,7 +172,7 @@ lines = [
     '<?xml version="1.0" encoding="utf-8"?>',
     '<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/calendar_widget_root" android:layout_width="match_parent" android:layout_height="match_parent">',
     '  <ImageView android:id="@+id/calendar_widget_background" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/wht_widget_background" android:contentDescription="@null" />',
-    '  <ImageView android:id="@+id/calendar_widget_logo" android:layout_width="130dp" android:layout_height="130dp" android:layout_gravity="center" android:alpha="0.06" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />',
+    '  <ImageView android:id="@+id/calendar_widget_logo" android:layout_width="130dp" android:layout_height="130dp" android:layout_gravity="center" android:alpha="0.035" android:src="@drawable/wht_widget_logo" android:contentDescription="@null" />',
     '  <LinearLayout android:id="@+id/calendar_widget_content" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="10dp">',
     '    <FrameLayout android:id="@+id/calendar_widget_header" android:layout_width="match_parent" android:layout_height="34dp">',
     '      <TextView android:id="@+id/calendar_widget_title" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:paddingLeft="12dp" android:paddingRight="12dp" android:maxLines="1" android:text="September 2026" android:textColor="@color/wht_widget_text" android:textSize="17sp" android:textStyle="bold" />',
