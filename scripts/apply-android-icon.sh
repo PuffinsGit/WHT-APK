@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # Generate launcher-icon variants for every WHT background preset. Android
-# activity aliases let the native app select the icon that matches the current
-# app palette while retaining the correct black/white logo for the system theme.
+# a stable Android launcher entry retains the current app task while the
+# icon follows the device's light or dark mode.
 LIGHT_SOURCE="resources/icon-light.png"
 DARK_SOURCE="resources/icon-dark.png"
 RES="android/app/src/main/res"
@@ -107,77 +107,19 @@ for path in (
 ):
     path.unlink(missing_ok=True)
 
-print("Generated palette-matched WHT launcher icons.")
+print("Generated day and night WHT launcher icons.")
 PY
 
+# Use one stable launcher component. Changing activity aliases while WHT is
+# foreground can remove the running task from the launcher on some devices.
+# Android chooses the day/night mipmap variant automatically.
 cat > "$JAVA_DIR/WhtLauncherIcon.java" <<'JAVA'
 package com.workedhourstracker.app;
-
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import org.json.JSONObject;
-
 final class WhtLauncherIcon {
-    private static final String[] ALIASES = {
-        "LauncherDarkMidnight", "LauncherDarkDeepBlue", "LauncherDarkDeepPurple", "LauncherDarkGraphite",
-        "LauncherDarkForest", "LauncherDarkOcean", "LauncherDarkBurgundy", "LauncherDarkWarmSlate",
-        "LauncherLightSoftSky", "LauncherLightBlueMist", "LauncherLightLavender", "LauncherLightSoftMint",
-        "LauncherLightPeach", "LauncherLightRose", "LauncherLightSage", "LauncherLightWarmSand"
-    };
-
     static void sync(Context context, JSONObject state) {
-        boolean light = (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
-            != Configuration.UI_MODE_NIGHT_YES;
-        String background = state.optString(light ? "lightBackground" : "darkBackground", "").toLowerCase();
-        String selected = light ? lightAlias(background) : darkAlias(background);
-        PackageManager manager = context.getPackageManager();
-        ComponentName selectedComponent = new ComponentName(context, context.getPackageName() + "." + selected);
-        if (manager.getComponentEnabledSetting(selectedComponent) != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
-            manager.setComponentEnabledSetting(selectedComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
-        }
-        for (String alias : ALIASES) {
-            if (alias.equals(selected)) continue;
-            ComponentName component = new ComponentName(context, context.getPackageName() + "." + alias);
-            if (manager.getComponentEnabledSetting(component) != PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
-                manager.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
-            }
-        }
-    }
-
-    private static String darkAlias(String background) {
-        if (background.contains("#0d2b3d")) return "LauncherDarkDeepBlue";
-        if (background.contains("#271641")) return "LauncherDarkDeepPurple";
-        if (background.contains("#1b222c")) return "LauncherDarkGraphite";
-        if (background.contains("#142b22")) return "LauncherDarkForest";
-        if (background.contains("#10313c")) return "LauncherDarkOcean";
-        if (background.contains("#331720")) return "LauncherDarkBurgundy";
-        if (background.contains("#29231f")) return "LauncherDarkWarmSlate";
-        return "LauncherDarkMidnight";
-    }
-
-    private static String lightAlias(String background) {
-        if (background.contains("#d9f1ff")) return "LauncherLightBlueMist";
-        if (background.contains("#eee5ff")) return "LauncherLightLavender";
-        if (background.contains("#dff8ef")) return "LauncherLightSoftMint";
-        if (background.contains("#fff0df")) return "LauncherLightPeach";
-        if (background.contains("#ffe7ef")) return "LauncherLightRose";
-        if (background.contains("#e4f1df")) return "LauncherLightSage";
-        if (background.contains("#f7ecd9")) return "LauncherLightWarmSand";
-        return "LauncherLightSoftSky";
-    }
-}
-JAVA
-
-cat > "$JAVA_DIR/WhtIconThemeReceiver.java" <<'JAVA'
-package com.workedhourstracker.app;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-public class WhtIconThemeReceiver extends BroadcastReceiver {
-    @Override public void onReceive(Context context, Intent intent) {
-        WhtLauncherIcon.sync(context, WhtWidgetStyle.state(context));
+        // The permanent MainActivity launcher icon follows the device theme.
     }
 }
 JAVA
@@ -185,61 +127,18 @@ JAVA
 python - <<'PY'
 from pathlib import Path
 import re
-
 manifest = Path("android/app/src/main/AndroidManifest.xml")
 text = manifest.read_text()
 application = re.search(r'<application\b[^>]*>', text)
-if not application or 'android:icon=' not in application.group(0) or 'android:roundIcon=' not in application.group(0):
-    raise SystemExit("Could not find the application icons in AndroidManifest.xml")
-app_tag = re.sub(r'android:icon="[^"]+"', 'android:icon="@mipmap/wht_app_icon"', application.group(0))
-app_tag = re.sub(r'android:roundIcon="[^"]+"', 'android:roundIcon="@mipmap/wht_app_icon"', app_tag)
-text = text[:application.start()] + app_tag + text[application.end():]
-activity = re.search(r'<activity\b[^>]*android:name="\.MainActivity"[\s\S]*?</activity>', text)
-if not activity:
-    raise SystemExit("Could not find MainActivity in AndroidManifest.xml")
-block = activity.group(0)
-for intent_filter in re.findall(r'\s*<intent-filter\b[^>]*>[\s\S]*?</intent-filter>', block):
-    if "android.intent.action.MAIN" in intent_filter and "android.intent.category.LAUNCHER" in intent_filter:
-        block = block.replace(intent_filter, "")
-text = text[:activity.start()] + block + text[activity.end():]
-
-start_marker = "        <!-- WHT_DYNAMIC_ICONS_START -->"
-end_marker = "        <!-- WHT_DYNAMIC_ICONS_END -->"
-if start_marker in text and end_marker in text:
-    before, rest = text.split(start_marker, 1)
-    _, after = rest.split(end_marker, 1)
-    text = before + after
-
-variants = [
-    ("LauncherDarkMidnight", "dark_midnight", True),
-    ("LauncherDarkDeepBlue", "dark_deep_blue", False),
-    ("LauncherDarkDeepPurple", "dark_deep_purple", False),
-    ("LauncherDarkGraphite", "dark_graphite", False),
-    ("LauncherDarkForest", "dark_forest", False),
-    ("LauncherDarkOcean", "dark_ocean", False),
-    ("LauncherDarkBurgundy", "dark_burgundy", False),
-    ("LauncherDarkWarmSlate", "dark_warm_slate", False),
-    ("LauncherLightSoftSky", "light_soft_sky", False),
-    ("LauncherLightBlueMist", "light_blue_mist", False),
-    ("LauncherLightLavender", "light_lavender", False),
-    ("LauncherLightSoftMint", "light_soft_mint", False),
-    ("LauncherLightPeach", "light_peach", False),
-    ("LauncherLightRose", "light_rose", False),
-    ("LauncherLightSage", "light_sage", False),
-    ("LauncherLightWarmSand", "light_warm_sand", False),
-]
-
-aliases = [start_marker]
-for name, resource, enabled in variants:
-    aliases.append(f'''        <activity-alias android:name=".{name}" android:targetActivity=".MainActivity" android:enabled="{str(enabled).lower()}" android:exported="true" android:icon="@mipmap/ic_launcher_{resource}" android:roundIcon="@mipmap/ic_launcher_{resource}" android:label="WHT">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>''')
-aliases.append('        <receiver android:name=".WhtIconThemeReceiver" android:exported="false"><intent-filter><action android:name="android.intent.action.CONFIGURATION_CHANGED" /></intent-filter></receiver>')
-aliases.append(end_marker)
-text = text.replace("    </application>", "\n".join(aliases) + "\n    </application>")
+if not application:
+    raise SystemExit("Could not find application in AndroidManifest.xml")
+tag = application.group()
+for attribute in ("icon", "roundIcon"):
+    tag = re.sub(r'android:' + attribute + r'="[^"]+"',
+                 'android:' + attribute + '="@mipmap/wht_app_icon"', tag)
+text = text[:application.start()] + tag + text[application.end():]
+if 'android.intent.category.LAUNCHER' not in text:
+    raise SystemExit("The permanent MainActivity launcher entry is missing")
 manifest.write_text(text)
-print("Configured dynamic WHT launcher aliases.")
+print("Configured stable day/night WHT launcher icon.")
 PY
