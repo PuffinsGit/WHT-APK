@@ -4169,7 +4169,7 @@
             </div>
             <div class="totalrow">
               <div class="totalcell"><span class="totalcell-label">Expected hours</span><span class="hours ${expectedHours ? "" : "empty"}">${hoursMinutesLabel(expectedHours)}</span></div>
-              <div class="totalcell"><span class="totalcell-label">Expect Income</span><span class="dailyincome ${expectedHours ? "" : "empty"}">${money(expectedHours * rate(i))}</span></div>
+              <div class="totalcell"><span class="totalcell-label">Expected Gross</span><span class="dailyincome ${expectedHours ? "" : "empty"}">${money(expectedHours * rate(i))}</span></div>
             </div>
             <button type="button" class="schedule-clear" data-field="clear">Clear</button>`;
           card.querySelectorAll("input").forEach(input => {
